@@ -1,0 +1,3 @@
+add_executable(deque_example example_usage.cpp)
+
+target_link_libraries(deque_example PRIVATE myDeque)
