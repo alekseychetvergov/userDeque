@@ -1,4 +1,4 @@
-// myDeque_Final.cpp: определяет точку входа для приложения.
+// myDeque_Final.cpp: Г®ГЇГ°ГҐГ¤ГҐГ«ГїГҐГІ ГІГ®Г·ГЄГі ГўГµГ®Г¤Г  Г¤Г«Гї ГЇГ°ГЁГ«Г®Г¦ГҐГ­ГЁГї.
 //
 #pragma once
 
@@ -97,14 +97,14 @@ void printDequeField(const MyDeque<int, Allocator, CHUNK_SIZE>& deque1) {
 }
 
 void plasementNew1() {
-    void* raw_memory = ::operator new(sizeof(Controllable));        // Создаем сырую память
-    Controllable* ptr1 = static_cast<Controllable*>(raw_memory);    // Создаем указатель на нужный нам объект в созданую сырую память
+    void* raw_memory = ::operator new(sizeof(Controllable));       
+    Controllable* ptr1 = static_cast<Controllable*>(raw_memory);   
 
     Controllable staticContr{ 3, 4.5f, "Alexey" };
-    constrDestr::construct(ptr1, staticContr);                                   // конструируем в сырой памяти наш объект
+    constrDestr::construct(ptr1, staticContr);                                   
     std::cout << ptr1->i << " " << ptr1->f << " " << ptr1->s << " " << "\n";
-    constrDestr::destroy(ptr1);                                                  // уничтожем наш объект
-    ::operator delete(raw_memory);                                  // очищаем сырую память
+    constrDestr::destroy(ptr1);                                                  
+    ::operator delete(raw_memory);                                  
 
     void* raw_memory1 = ::operator new(sizeof(Controllable));
     Controllable* ptr2 = static_cast<Controllable*>(raw_memory1);
@@ -206,7 +206,6 @@ void DequeIterator1() {
 
 void Deque1() {
     MyDeque<int, MyPmrAllocator<int>, 12> deque1(31, 66);
-    //std::cout << "size_elem_map_ = " << deque1.size_elem_map_ << '\n';
     std::cout << "size_map_ = " << deque1.size_map_ << '\n';
     std::cout << "capasity_ = " << deque1.capasity_ << '\n';
     std::cout << "size_ = " << deque1.size_ << '\n';
@@ -288,7 +287,6 @@ void Deque3() {
 
     std::cout << "\n";
     deque1.push_back(11); deque1.push_back(33); deque1.push_back(44); deque1.push_back(55);
-    //deque1.push_back(66); deque1.push_back(77); deque1.push_back(88);
 #ifdef PRINT_DEQUE_FIELD_2
     printDequeField<int, MyPmrAllocator<int>>(deque1);
 #endif // PRINT_DEQUE_FIELD_2
@@ -391,10 +389,6 @@ void Deque6() {
 #ifdef PRINT_DEQUE_ARRAY_2
     printDequeArray<int, MyPmrAllocator<int>>(deque1);
 #endif // PRINT_DEQUE_ARRAY_2
-
-    //deque1.push_back(std::begin(vec1), std::end(vec1));
-    //deque1.push_front(std::begin(vec1), std::end(vec1));
-    //deque1.insert(std::begin(deque1) + 8, 50);
     deque1.insert(std::begin(deque1) + 1, std::begin(vec1), std::end(vec1));
 #ifdef PRINT_DEQUE_FIELD_2
     printDequeField<int, MyPmrAllocator<int>>(deque1);
@@ -472,7 +466,6 @@ void algorithmDeque2() {
 
     std::transform(itBeg, itEnd, itBeg, [](auto&& it) {static int count = 0; return count++; });
     {
-        //std::copy(deque1.begin(), deque1.end(), std::ostream_iterator<int>(std::cout, " "));
         std::ranges::copy(deque1, std::ostream_iterator<int>(std::cout, " "));
         std::cout << "\n";
 #ifdef PRINT_DEQUE_FIELD_2
