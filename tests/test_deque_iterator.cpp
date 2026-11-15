@@ -48,10 +48,10 @@ TEST(MyDequeIteratorTest, CopyMoveConstrAndAssignmIterator) {
     EXPECT_EQ(*begin2, 1);
     begin2++;
     Iterator begin3(std::move (begin2));
-    EXPECT_EQ(*begin2, 2); // несмотря на перемещение, продолжает указывать на 3-й элемент
+    EXPECT_EQ(*begin2, 2); 
     EXPECT_EQ(*begin3, 2);
     begin2 = std::move(begin1);
-    EXPECT_EQ(*begin1, 1); // несмотря на перемещение, продолжает указывать на 2-й элемент
+    EXPECT_EQ(*begin1, 1); 
     EXPECT_EQ(*begin2, 1);
 }
 
@@ -87,11 +87,11 @@ TEST(MyDequeIteratorTest, CopyMoveConstrAndAssignmConstIterator) {
     EXPECT_EQ(*cbegin2, Controllable(5, 5.f, std::string("element5")));
     cbegin2--;
     ConstIterator cbegin3(std::move(cbegin2));
-    EXPECT_EQ(*cbegin2, Controllable(4, 4.f, std::string("element4"))); // несмотря на перемещение, продолжает указывать на 3-й элемент
+    EXPECT_EQ(*cbegin2, Controllable(4, 4.f, std::string("element4"))); 
     EXPECT_EQ(*cbegin3, Controllable(4, 4.f, std::string("element4")));
     cbegin1++; cbegin1++; cbegin1++;
     cbegin2 = std::move(cbegin1);
-    EXPECT_EQ(*cbegin1, Controllable(3, 3.f, std::string("element3"))); // несмотря на перемещение, продолжает указывать на 2-й элемент
+    EXPECT_EQ(*cbegin1, Controllable(3, 3.f, std::string("element3"))); 
     EXPECT_EQ(*cbegin2, Controllable(3, 3.f, std::string("element3")));
 }
 
@@ -125,17 +125,17 @@ TEST(MyDequeIteratorTest, CrossIteratorCopyConstrAndAssignm) {
         begin1.setBlock(&map[0], 0);
     EXPECT_EQ(*begin1, Controllable(0, 0.f, std::string("element0")));
     begin1 += 16;
-    ConstIterator cbegin1(begin1); // Проверяем копирующий конструктор из не-const итератора в const
+    ConstIterator cbegin1(begin1); 
     EXPECT_EQ(*cbegin1, Controllable(16, 16.f, std::string("element16")));
     ConstIterator cbegin2{};
-    cbegin2 = cbegin1; // Проверяем копирующее присваивание из не-const итератора в const
+    cbegin2 = cbegin1; 
     cbegin2--; --cbegin2;
     EXPECT_EQ(*(cbegin1.operator->()), Controllable(16, 16.f, std::string("element16")));
     EXPECT_EQ(*(cbegin2.operator->()), Controllable(14, 14.f, std::string("element14")));
 
-    constexpr bool is_assignable = std::is_assignable_v<Iterator&, ConstIterator&>; // false (копирующее присваивание из const итератора в не-const)
+    constexpr bool is_assignable = std::is_assignable_v<Iterator&, ConstIterator&>; 
     constexpr bool is_assignable1 = std::is_assignable_v<ConstIterator&, const Iterator&>;
-    constexpr bool can_construct = std::is_constructible_v<Iterator, const ConstIterator&>; // false (копирующий конструктор из const итератора в не-const)
+    constexpr bool can_construct = std::is_constructible_v<Iterator, const ConstIterator&>; 
     constexpr bool can_construct1 = std::is_constructible_v<const ConstIterator, const Iterator&>;
 
     EXPECT_FALSE(is_assignable);
@@ -179,11 +179,10 @@ TEST(MyDequeIteratorTest, PrePostIncrimDecremAndDiffIter) {
     ++crbeginIt2;
     EXPECT_TRUE(crbeginIt1 == crbeginIt2);
 
-    EXPECT_TRUE(crbeginIt1.base() - cbeginIt1 == 23); // Разница между const_reverce_iteranor и const_iteranor 
-    EXPECT_TRUE(crbeginIt1 - std::rbegin(deq1) == 4); // Разница между const_reverce_iteranor и reverce_iteranor 
-    EXPECT_TRUE(std::end(deq1) - cbeginIt1 == 27); // Разница между iteranor и const_iteranor
-    EXPECT_TRUE(std::begin(deq1) - std::rbegin(deq1).base() == -30); // Разница между iteranor и reverce_iteranor
-    //std::ranges::copy(deq1, std::ostream_iterator<int>(std::cout, " "));
+    EXPECT_TRUE(crbeginIt1.base() - cbeginIt1 == 23); 
+    EXPECT_TRUE(crbeginIt1 - std::rbegin(deq1) == 4); 
+    EXPECT_TRUE(std::end(deq1) - cbeginIt1 == 27); 
+    EXPECT_TRUE(std::begin(deq1) - std::rbegin(deq1).base() == -30); 
 } 
 
 TEST(MyDequeIteratorTest, SummDiffIterIndexEqual) {
@@ -254,30 +253,30 @@ TEST(MyDequeIteratorTest, referencePointerDistance) {
     reverseIteratorContr rbeginIt = std::rbegin(deq1);
     constReverseIteratorContr crbeginIt = std::crbegin(deq1) + 7;
 
-    EXPECT_TRUE(beginIt == cbeginIt - 8);   // проверили сравнение не-const и const
-    EXPECT_TRUE(rbeginIt == crbeginIt - 7); // проверили сравнение не-const reverce и const reverce
+    EXPECT_TRUE(beginIt == cbeginIt - 8);   
+    EXPECT_TRUE(rbeginIt == crbeginIt - 7); 
     EXPECT_TRUE(*(crbeginIt - 1) == cbeginIt[0]);
 
-    *rbeginIt = rbeginIt[5]; // присваиваем в разыменованный 1 элемент с права значение 5 элемента справа через []
-    *beginIt = beginIt[7];   // присваиваем в разыменованный 1 элемент значение 7 элемента через []
+    *rbeginIt = rbeginIt[5]; 
+    *beginIt = beginIt[7];   
 
-    EXPECT_EQ(*(beginIt.operator->()), beginIt[7]); // так же проверяем работу operator->()
+    EXPECT_EQ(*(beginIt.operator->()), beginIt[7]); 
     EXPECT_EQ(beginIt[7], Controllable(8, 8.f, std::string("element8")));
-    EXPECT_EQ(*(rbeginIt.operator->()), rbeginIt[5]); // так же проверяем работу operator->()
+    EXPECT_EQ(*(rbeginIt.operator->()), rbeginIt[5]); 
     EXPECT_EQ(rbeginIt[5], Controllable(10, 10.f, std::string("element10")));
 
-    rbeginIt [3] = crbeginIt[2]; // присваиваем в 3 элемент с конца 9 (7+2) элемент с конца из const_reverce_iterator
-    beginIt [4] = cbeginIt[1]; // присваиваем в 4 элемент 9 (8+1) элемент с начала из const_iterator
+    rbeginIt [3] = crbeginIt[2]; 
+    beginIt [4] = cbeginIt[1]; 
 
     EXPECT_TRUE(*(beginIt + 4) == *(std::cbegin(deq1) + 9)); 
     EXPECT_EQ(beginIt[4], Controllable(10, 10.f, std::string("element10")));
     EXPECT_TRUE(beginIt[4] == cbeginIt[1]);
-    // сравниваем значение 4 слева и 10 справа (одно и то же) по разнонаправленным и разноконстантным итераторам
+    
     EXPECT_TRUE(*((beginIt + 4).operator->()) == *(std::crbegin(deq1) + 10));
 
     EXPECT_TRUE(*(rbeginIt + 3) == *(std::crbegin(deq1) + 9)); 
     EXPECT_EQ(rbeginIt[3], Controllable(6, 6.f, std::string("element6"))); 
     EXPECT_TRUE(rbeginIt[3] == crbeginIt[2]);
-    // сравниваем значение 11 слева и 3 справа (одно и то же) по разнонаправленным и разноконстантным итераторам
+    
     EXPECT_TRUE(*((rbeginIt + 3).operator->()) == *(std::cbegin(deq1) + 11));
 }
