@@ -19,7 +19,6 @@
 TEST(MyDequeConstructorTest, DefaultConstructorMathValue) {
     Deque::MyDeque<int> d{};
 
-    // EXPECT_TRUE(d.size() == 0);
     EXPECT_EQ(d.size(), 0);
     EXPECT_EQ(d.begin(), d.end());
     EXPECT_EQ(d.getFirstBlock(), d.getLastBlock());
@@ -38,11 +37,11 @@ TEST(MyDequeConstructorTest, SizeConstructorMath) {
     MyDeque deq5(80);
     MyDeque deq6(509);
 
-    EXPECT_TRUE(deq1.size() == 0);            // размер
-    EXPECT_TRUE(deq1.capasity() == 30);       // вместимость
-    EXPECT_TRUE(deq1.getSizeMap() == 3);      // количество блоков
-    EXPECT_TRUE(deq1.getFirstBlock() == 1);   // первый блок 
-    EXPECT_TRUE(deq1.getLastBlock() == 1);    // последний блок
+    EXPECT_TRUE(deq1.size() == 0);            
+    EXPECT_TRUE(deq1.capasity() == 30);       
+    EXPECT_TRUE(deq1.getSizeMap() == 3);      
+    EXPECT_TRUE(deq1.getFirstBlock() == 1);    
+    EXPECT_TRUE(deq1.getLastBlock() == 1);    
 
     EXPECT_TRUE(deq2.size() == 1);
     EXPECT_TRUE(deq2.capasity() == 30);
@@ -73,18 +72,15 @@ TEST(MyDequeConstructorTest, SizeConstructorMath) {
     EXPECT_TRUE(deq6.getSizeMap() == 100);
     EXPECT_TRUE(deq6.getFirstBlock() == 24);
     EXPECT_TRUE(deq6.getLastBlock() == 75);
-
-    //std::cout << "1 - " << deq1.capasity() << " , 2 - " << deq2.capasity() << " , 3 - " << deq3.capasity() << " , 4 - "
-    //    << deq4.capasity() << " , 5 - " << deq5.capasity() << " , 6 - " << deq6.capasity() << "\n";
 }
 
 TEST(MyDequeConstructorTest, SizeConstructorAllocate) {
     const constexpr int sizeElemMap = 10;
 
     using Controllable = userClass::Controllable;
-    using MockMemoryResource = FaultyAllocator::MockMemoryResource;               // Аллокатор считающий память
-    using FaultyAllocator = FaultyAllocator::FaultyAllocator <Controllable>;      // Аллокатор выбрасывающий "std::bad_alloc"
-    using ThrowingElement = userClass::ThrowingElement;                           // Класс выбрасывающий "std::runtime_error"
+    using MockMemoryResource = FaultyAllocator::MockMemoryResource;               
+    using FaultyAllocator = FaultyAllocator::FaultyAllocator <Controllable>;      
+    using ThrowingElement = userClass::ThrowingElement;                           
 
     using MyPmrAllocator = PmrAllocator::MyPmrAllocator<Controllable>;
     using MyPmrAllocatorThrow = PmrAllocator::MyPmrAllocator<ThrowingElement>;
@@ -140,7 +136,7 @@ TEST(MyDequeConstructorTest, ElementsConstructionFailure) {
             EXPECT_EQ(*ItDeq2Begin, Controllable());
             ++ItDeq2Begin;
         }
-    } // Проверяем, что все освобождено
+    } 
     EXPECT_EQ(mock_res.active_allocations, 0);
     EXPECT_EQ(mock_res.deallocate_calls, mock_res.allocate_calls);
 }
@@ -229,14 +225,11 @@ TEST(MyDequeConstructorTest, CopyConstructionAndAssigmAllocate) {
         ThrowingElement::max_success_allocs = 10;
         MyDequePMRAllocThrowElem dequeThrow1(8, ThrowingElement(), allocThrow);
         EXPECT_NO_THROW(dequeThrow1);
-        //std::cout << ThrowingElement::construct_count << " " << ThrowingElement::max_success_allocs << "\n";
 
         ThrowingElement::max_success_allocs = 17;
         MyDequePMRAllocThrowElem dequeThrow2(dequeThrow1);
         EXPECT_THROW((MyDequePMRAllocThrowElem(dequeThrow1)), std::runtime_error);
-        //std::cout << ThrowingElement::construct_count << " " << ThrowingElement::max_success_allocs << "\n";
     }
-    //std::cout << mockResContr.allocate_calls << " " << mockResContr.deallocate_calls << " " << mockResContr.active_allocations << "\n";
     EXPECT_EQ(mockResContr.active_allocations, 0);
     EXPECT_EQ(mockResContr.deallocate_calls, mockResContr.allocate_calls);
     EXPECT_EQ(mockResContr.deallocate_calls, 9);
@@ -255,7 +248,6 @@ TEST(MyDequeConstructorTest, CopyConstructionAndAssigmAllocate) {
         MyDequePmrAllocContr dequeContr5{};
         dequeContr5 = dequeContr4;
     }
-    //std::cout << mockResContr.allocate_calls << " " << mockResContr.deallocate_calls << " " << mockResContr.active_allocations << "\n";
     EXPECT_EQ(mockResContr.active_allocations, 0);
     EXPECT_EQ(mockResContr.deallocate_calls, mockResContr.allocate_calls);
     EXPECT_EQ(mockResContr.deallocate_calls, 15);
@@ -267,7 +259,6 @@ TEST(MyDequeConstructorTest, CopyConstructionAndAssigmAllocate) {
 
         dequeInt3 = dequeInt1;
     }
-    //std::cout << mockResContr.allocate_calls << " " << mockResContr.deallocate_calls << " " << mockResContr.active_allocations << "\n";
     EXPECT_EQ(mockResContr.active_allocations, 0);
     EXPECT_EQ(mockResContr.deallocate_calls, mockResContr.allocate_calls);
     EXPECT_EQ(mockResContr.deallocate_calls, 23);
@@ -339,22 +330,18 @@ TEST(MyDequeConstructorTest, MoveConstructionAndAssigmMath) {
     EXPECT_TRUE((dequeContr2.getFirstBlock() == 1) && (dequeContr1.getFirstBlock() == 0));
     EXPECT_TRUE((dequeContr2.getLastBlock() == 2) && (dequeContr1.getLastBlock() == 0));
 
-    //dequeContr1.push_back(Controllable(9, 9.f, std::string("element9")));
-    //std::cout << dequeContr1.size() << " " << dequeContr1.capasity() << "\n";
     dequeContr1.size();
     
     std::ranges::generate_n(std::back_inserter(dequeContr1), 8, []() mutable {static int r = 0; r++;
             return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));; });
     std::ranges::generate_n(std::front_inserter(dequeContr1), 10, []() mutable {static int r = 0; r--;
         return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));; });
-    //std::ranges::copy(dequeContr1, std::ostream_iterator<Controllable>(std::cout, "\n"));
 
     MyDequePmrAllocContr dequeContr3{};
     dequeContr3 = std::move(dequeContr2);
     dequeContr2 = std::move(dequeContr1);
 
     EXPECT_TRUE((dequeContr3.size() == 17) && (dequeContr2.size() == 18) && (dequeContr1.size() == 0));
-    //std::cout << dequeContr2.size() << " " << dequeContr2.capasity() << " " << dequeContr2.getFirstBlock() << "\n";
     EXPECT_TRUE((dequeContr3.capasity() == 60) && (dequeContr2.capasity() == 45) && (dequeContr1.capasity() == 0));
     EXPECT_TRUE((dequeContr3.getSizeMap() == 4) && (dequeContr2.getSizeMap() == 3) && (dequeContr1.getSizeMap() == 0));
     EXPECT_TRUE((dequeContr3.getFirstBlock() == 1) && (dequeContr2.getFirstBlock() == 0) && (dequeContr1.getFirstBlock() == 0));
@@ -394,7 +381,6 @@ TEST(MyDequeConstructorTest, MoveConstructionAndAssigmMath) {
     EXPECT_TRUE((dequeInt3.getSizeMap() == 4) && (dequeInt2.getSizeMap() == 3) && (dequeInt1.getSizeMap() == 0));
     EXPECT_TRUE((dequeInt3.getFirstBlock() == 1) && (dequeInt2.getFirstBlock() == 1) && (dequeInt1.getFirstBlock() == 0));
     EXPECT_TRUE((dequeInt3.getLastBlock() == 2) && (dequeInt2.getLastBlock() == 2) && (dequeInt1.getLastBlock() == 0));
-    //std::ranges::copy(dequeInt2, std::ostream_iterator<int>(std::cout, " "));
 
     auto ItDeqIntBeg2 = std::begin(dequeInt2);
     auto ItDeqIntEnd2 = std::end(dequeInt2);
@@ -452,7 +438,6 @@ TEST(MyDequeConstructorTest, MoveConstructionAndAssigmAllocate) {
         ExeptAllocatorInt::should_throw_on_move = true;
         MyDequeExceptAllocInt dequeExcept1(11, 33);
         EXPECT_NO_THROW(dequeExcept1);
-        //EXPECT_NO_THROW((MyDequePMRAllocThrowElem(std::move(dequeThrow1))));
         EXPECT_THROW({MyDequeExceptAllocInt destination(std::move(dequeExcept1));
             }, std::overflow_error);
         ExeptAllocatorInt::should_throw_on_move = false;
@@ -471,17 +456,6 @@ TEST(MyDequeConstructorTest, MoveConstructionAndAssigmAllocate) {
         static_assert(!std::is_nothrow_move_assignable_v<MyDequeExceptAllocInt>);
 
         EXPECT_THROW({ dequeExcept2 = std::move(dequeExcept1); }, std::invalid_argument);
-        //EXPECT_THROW({
-        //    // Этот Guard уничтожится СРАЗУ при выходе из этих {} скобок, 
-        //    // гарантируя выключение флага до того, как gtest пойдет уничтожать деки!
-        //    struct LocalGuard {
-        //        ~LocalGuard() {
-        //            ExeptAllocatorInt::should_throw_on_move = false;
-        //        }
-        //    } local_guard;
-
-        //    dequeExcept2 = std::move(dequeExcept1);
-        //    }, std::exception); 
         ExeptAllocatorInt::should_throw_on_move = false;
 
         EXPECT_EQ(dequeExcept1.size(), 11);
@@ -491,20 +465,15 @@ TEST(MyDequeConstructorTest, MoveConstructionAndAssigmAllocate) {
         EXPECT_EQ(dequeExcept2.front(), 22);
         EXPECT_EQ(*dequeExcept2.rbegin(), 22);
 
-        //std::cout << dequeExcept2.size() << " " << dequeExcept2.capasity() << "\n";
     }
 
     static_assert(std::is_nothrow_move_constructible_v<MyDequePmrAllocContr>);
     static_assert(!std::is_nothrow_move_assignable_v<MyDequePmrAllocContr>);
 
-    //std::cout << mockRes.allocate_calls << " " << mockRes.deallocate_calls << " " << mockRes.active_allocations << "\n";
-
     MyDequePmrAllocContr dequeContr3(13, Controllable(7, 7.f, std::string("element7")), allocContr);
-    //std::cout << mockRes.allocate_calls << " " << mockRes.deallocate_calls << " " << mockRes.active_allocations << "\n";
     EXPECT_NO_THROW({ MyDequePmrAllocContr dequeContr4(std::move(dequeContr3));});
     MyDequePmrAllocContr dequeContr5{};
     EXPECT_NO_THROW({ dequeContr5 = dequeContr3;});
-    //std::cout << mockRes.allocate_calls << " " << mockRes.deallocate_calls << " " << mockRes.active_allocations << "\n";
 
     EXPECT_EQ(mockRes.active_allocations, 0);
     EXPECT_EQ(mockRes.deallocate_calls, 6);
@@ -577,8 +546,6 @@ TEST(MyDequeConstructorTest, InitialiserConstructionAllocate) {
     {
         ThrowingElement::max_success_allocs = 17;
         ThrowingElement::max_moves_elem = 9;
-        //std::list<ThrowingElement> listContr1({ ThrowingElement(), ThrowingElement(), ThrowingElement(), ThrowingElement(), 
-            //ThrowingElement(), ThrowingElement(), ThrowingElement(), ThrowingElement()});
         MyDequePMRAllocThrowElem dequeThrow1({ ThrowingElement(), ThrowingElement(), ThrowingElement(), ThrowingElement(),
             ThrowingElement(), ThrowingElement(), ThrowingElement(), ThrowingElement() }, allocThrow);
         EXPECT_NO_THROW(dequeThrow1);
@@ -586,8 +553,6 @@ TEST(MyDequeConstructorTest, InitialiserConstructionAllocate) {
             { ThrowingElement(), ThrowingElement(), ThrowingElement(), ThrowingElement(),
             ThrowingElement(), ThrowingElement(), ThrowingElement(), ThrowingElement() }, allocThrow); }, std::runtime_error);
     }
-    //std::cout << mockRes.allocate_calls << " " << mockRes.deallocate_calls << " " << mockRes.active_allocations << "\n";
-
     {
         MyDequePmrAllocInt dequeInt1 ({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, allocInt);
         EXPECT_NO_THROW(dequeInt1);
@@ -835,8 +800,6 @@ TEST(MyDequeMethodTest, push_backMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-        //std::cout << contrContr1.size() << " " << contrContr1.capasity() << "\n";
-        //std::cout << contrContr1[1] << " " << contrContr1[3] << " " << contrContr1[4] << "\n";
         FaultyAllocator::BadMemoryResource::max_size = 1;
         EXPECT_THROW({ contrContr1.push_back(Controllable(15, 15.f, std::string{ "element15" })); }, std::bad_alloc);
         EXPECT_EQ(contrContr1.size(), 14);
@@ -844,11 +807,7 @@ TEST(MyDequeMethodTest, push_backMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-        //std::cout << contrContr1.size() << " " << contrContr1.capasity() << "\n";
-        //std::cout << sizeof(contrContr1) << "\n";
-        //std::cout << contrContr1[1] << " " << contrContr1[1] << " " << contrContr1[1] << "\n";
     }
-
     {
         MyDequePmrAllocInt dequeInt1(0, int{}, allocInt);
         EXPECT_NO_THROW({ std::ranges::copy(std::views::iota(0, 40), std::back_inserter(dequeInt1)); });
@@ -880,8 +839,6 @@ TEST(MyDequeMethodTest, push_frontMetodTrivialMath) {
         Controllable(8, 8.f, std::string("element8")),
         Controllable(9, 9.f, std::string("element9")) });
 
-    //std::cout << std::begin(contrContr1).getFirstI() << " " << std::begin(contrContr1).getFirstJ() << "\n";
-
     contrContr1.push_front(Controllable(10, 10.f, std::string("element10")));
     contrContr1.push_front(Controllable(11, 11.f, std::string("element11")));
     EXPECT_EQ(contrContr1[0], Controllable(11, 11.f, std::string("element11")));
@@ -891,26 +848,7 @@ TEST(MyDequeMethodTest, push_frontMetodTrivialMath) {
     EXPECT_TRUE(contrContr1.getSizeMap() == 3);
     EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
     EXPECT_TRUE(contrContr1.getLastBlock() == 1);
-    //std::cout << contrContr1.size() << " " << contrContr1.capasity() << " " << contrContr1.getSizeMap() << "\n";
-    //std::cout << std::begin(contrContr1).getFirstI() << " " << std::begin(contrContr1).getFirstJ() << "\n";
-    /*auto&& map = contrContr1.getMap();
-    for (size_t i = 0; i < contrContr1.getSizeMap(); ++i) {
-        if (map[i] != nullptr) {
-            for (size_t j = 0; j < contrContr1.size_elem_map_; ++j) {
-                if (map[i] != nullptr)
-                    std::cout << map[i][j].i << "\t";
-                else
-                    std::cout << "NULL\t";
-            }
-            std::cout << "\n";
-        }
-        else {
-            for (size_t j = 0; j < contrContr1.size_elem_map_; ++j)
-                std::cout << "NULL\t";
-            std::cout << "\n";
-        }
-    } std::cout << "\n" << "\n";*/
-
+    
     std::ranges::generate_n(std::front_inserter(contrContr1), 12, []() mutable {static int r = 11; r++;
             return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r)))); });
 
@@ -920,7 +858,6 @@ TEST(MyDequeMethodTest, push_frontMetodTrivialMath) {
     EXPECT_TRUE(contrContr1.getSizeMap() == 6);
     EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
     EXPECT_TRUE(contrContr1.getLastBlock() == 3);
-    //std::cout << std::begin(contrContr1).getFirstI() << " " << std::begin(contrContr1).getFirstJ() << "\n";
     EXPECT_EQ(contrContr1[0], Controllable(24, 24.f, std::string("element24")));
     EXPECT_EQ(contrContr1[6], Controllable(18, 18.f, std::string("element18")));
     EXPECT_EQ(contrContr1[21], Controllable(7, 7.f, std::string("element7")));
@@ -977,7 +914,6 @@ TEST(MyDequeMethodTest, push_frontMetodTrivialAllocate) {
         Controllable(7, 7.f, std::string("element7")),
         Controllable(8, 8.f, std::string("element8")),
         Controllable(9, 9.f, std::string("element9")) }, allocContrBad);
-        //std::cout << contrContr1.size() << " " << contrContr1.capasity() << "\n";
         EXPECT_NO_THROW({ std::ranges::generate_n(std::back_inserter(contrContr1), 13, []() mutable {static int r = 9; r++;
             return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));; }); });
         EXPECT_EQ(contrContr1.size(), 22);
@@ -985,8 +921,6 @@ TEST(MyDequeMethodTest, push_frontMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 4);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 3);
-        //std::cout << contrContr1.size() << " " << contrContr1.capasity() << "\n";
-        //std::cout << contrContr1[16].f << " " << contrContr1.end().getFirstI() << " " << contrContr1.end().getFirstJ() << "\n";
         FaultyAllocator::BadMemoryResource::max_size = 1;
         EXPECT_THROW({ contrContr1.push_back(Controllable(23, 23.f, std::string{ "element23" })); }, std::bad_alloc);
         EXPECT_EQ(contrContr1.size(), 22);
@@ -994,9 +928,6 @@ TEST(MyDequeMethodTest, push_frontMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 4);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 3);
-        //std::cout << contrContr1.size() << " " << contrContr1.capasity() << "\n";
-        //std::cout << sizeof(contrContr1) << "\n";
-        //std::cout << contrContr1[1] << " " << contrContr1[1] << " " << contrContr1[1] << "\n";
     }
     {
         MyDequePmrAllocInt dequeInt1(0, int{}, allocInt);
@@ -1046,8 +977,6 @@ TEST(MyDequeMethodTest, push_backMetodItheratorMath) {
     EXPECT_TRUE(contrInt1.getSizeMap() == 3);
     EXPECT_TRUE(contrInt1.getFirstBlock() == 1);
     EXPECT_TRUE(contrInt1.getLastBlock() == 1);
-    //std::cout << contrInt1.cbegin().getFirstI() << " " << contrInt1.cbegin().getFirstJ() << "\n";
-    //std::cout << contrInt1.size() << " " << contrInt1.capasity() << "\n";
     std::vector<int> vecInt1({ 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80 });
     contrInt1.push_back(std::begin(vecInt1), std::begin(vecInt1) + 3);
     contrInt1.push_back(std::begin(vecInt1) + 3, std::begin(vecInt1) + 6);
@@ -1058,9 +987,6 @@ TEST(MyDequeMethodTest, push_backMetodItheratorMath) {
     EXPECT_TRUE(contrInt1.getSizeMap() == 11);
     EXPECT_TRUE(contrInt1.getFirstBlock() == 4);
     EXPECT_TRUE(contrInt1.getLastBlock() == 8);
-
-    //std::ranges::copy(contrInt1, std::ostream_iterator<int>(std::cout, " "));
-    //std::cout << contrInt1.size() << " " << contrInt1.capasity() << "\n";
 }
 
 TEST(MyDequeMethodTest, push_backMetodItheratorAllocate) {
@@ -1129,7 +1055,6 @@ TEST(MyDequeMethodTest, push_backMetodItheratorAllocate) {
         Controllable(11, 11.f, std::string("element11")),
         Controllable(12, 12.f, std::string("element12")) });
 
-        //std::cout << contrContr1.size() << " " << contrContr1.capasity() << "\n";
         EXPECT_NO_THROW({ contrContr1.push_back(std::cbegin(deq1), std::cbegin(deq1) + 4); });
         EXPECT_EQ(contrContr1.size(), 4);
         EXPECT_EQ(contrContr1.capasity(), 18);
@@ -1170,17 +1095,13 @@ TEST(MyDequeMethodTest, push_frontMetodItheratorMath) {
     Deque::MyDeque<int, MyPmrAllocatorInt, sizeElemMap> contrInt1;
 
     std::vector<int> vecInt1({ 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80 });
-    //std::cout << contrInt1.cbegin().getFirstI() << " " << contrInt1.cbegin().getFirstJ() << "\n";
     auto itBegin = std::begin(vecInt1);
-    //contrInt1.push_back(77);
     contrInt1.push_front(itBegin, (itBegin + 6));
     EXPECT_EQ(contrInt1.size(), 6);
     EXPECT_EQ(contrInt1.capasity(), 30);
     EXPECT_TRUE(contrInt1.getSizeMap() == 3);
     EXPECT_TRUE(contrInt1.getFirstBlock() == 1);
     EXPECT_TRUE(contrInt1.getLastBlock() == 1);
-    //contrInt1.push_front(itBegin, (itBegin + 2));
-    //std::cout << contrInt1.cbegin().getFirstI() << " " << contrInt1.cbegin().getFirstJ() << "\n";
     contrInt1.push_front((itBegin + 6), (itBegin + 9));
     contrInt1.push_front((itBegin + 9), (itBegin + 12));
     EXPECT_EQ(contrInt1.size(), 12);
@@ -1188,7 +1109,6 @@ TEST(MyDequeMethodTest, push_frontMetodItheratorMath) {
     EXPECT_TRUE(contrInt1.getSizeMap() == 3);
     EXPECT_TRUE(contrInt1.getFirstBlock() == 0);
     EXPECT_TRUE(contrInt1.getLastBlock() == 1);
-    //std::cout << contrInt1.cbegin().getFirstI() << " " << contrInt1.cbegin().getFirstJ() << "\n";
     contrInt1.push_front((itBegin + 12), (itBegin + 20));
     EXPECT_EQ(contrInt1.size(), 20);
     EXPECT_EQ(contrInt1.capasity(), 70);
@@ -1196,23 +1116,6 @@ TEST(MyDequeMethodTest, push_frontMetodItheratorMath) {
     EXPECT_TRUE(contrInt1.getFirstBlock() == 2);
     EXPECT_TRUE(contrInt1.getLastBlock() == 4);
 
-    /*auto&& map = contrInt1.getMap();
-    for (size_t i = 0; i < contrInt1.getSizeMap(); ++i) {
-        if (map[i] != nullptr) {
-            for (size_t j = 0; j < contrInt1.size_elem_map_; ++j) {
-                if (map[i] != nullptr)
-                    std::cout << map[i][j] << "\t";
-                else
-                    std::cout << "NULL\t";
-            }
-            std::cout << "\n";
-        }
-        else {
-            for (size_t j = 0; j < contrInt1.size_elem_map_; ++j)
-                std::cout << "NULL\t";
-            std::cout << "\n";
-        }
-    } std::cout << "\n" << "\n";*/
     MyDequePmrAllocContr contrContr1;
     std::deque< Controllable> deq1({
         Controllable(1, 1.f, std::string("element1")),
@@ -1305,7 +1208,6 @@ TEST(MyDequeMethodTest, push_frontMetodItheratorAllocate) {
         Controllable(11, 11.f, std::string("element11")),
         Controllable(12, 12.f, std::string("element12")) });
 
-        //std::cout << contrContr1.size() << " " << contrContr1.capasity() << "\n";
         EXPECT_NO_THROW({ contrContr1.push_front(std::cbegin(deq1), std::cbegin(deq1) + 4); });
         EXPECT_EQ(contrContr1.size(), 4);
         EXPECT_EQ(contrContr1.capasity(), 18);
@@ -1369,8 +1271,6 @@ TEST(MyDequeMethodTest, InsertMetodTrivialMath) {
     EXPECT_TRUE(deq1.getSizeMap() == 5);
     EXPECT_TRUE(deq1.getFirstBlock() == 1);
     EXPECT_TRUE(deq1.getLastBlock() == 3);
-    //std::ranges::copy(deq1, std::ostream_iterator<int>(std::cout, " "));
-    //std::cout << "\n";
 
     std::deque <Controllable> deqStd2(10);
     auto itStd = std::begin(deqStd2);
@@ -1396,8 +1296,6 @@ TEST(MyDequeMethodTest, InsertMetodTrivialMath) {
     EXPECT_TRUE(deq2.getSizeMap() == 4);
     EXPECT_TRUE(deq2.getFirstBlock() == 1);
     EXPECT_TRUE(deq2.getLastBlock() == 2);
-    //std::ranges::copy(deq2 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-    //std::cout << "\n";
 }
 
 TEST(MyDequeMethodTest, InsertMetodTrivialAllocate) {
@@ -1434,9 +1332,7 @@ TEST(MyDequeMethodTest, InsertMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 1);
         ThrowingElement::max_success_allocs = 17;
         ThrowingElement::max_moves_elem = 20;
-        //std::cout << ThrowingElement::max_success_allocs << " " << ThrowingElement::max_moves_elem << '\n';
         EXPECT_NO_THROW({ for (size_t i = 0; i < 7; ++i) {
-                            //std::cout << "ThrowingElement::construct_count - " << ThrowingElement::construct_count << "\n";
                             dequeThrow1.insert(std::begin(dequeThrow1) + i, ThrowingElement());
                         }; });
         EXPECT_EQ(dequeThrow1.size(), 9);
@@ -1472,7 +1368,6 @@ TEST(MyDequeMethodTest, InsertMetodTrivialAllocate) {
             });
 
         EXPECT_NO_THROW({ for (size_t i = 0; i < 5; ++i) {
-            //std::cout << "ThrowingElement::construct_count - " << ThrowingElement::construct_count << "\n";
             contrContr1.insert(std::begin(contrContr1) + i + 3, Controllable(10 + i, static_cast<float>(10 + i), (std::string{ "element" } + std::to_string(10 + i))));
         }; });
         EXPECT_EQ(contrContr1.size(), 16);
@@ -1488,9 +1383,6 @@ TEST(MyDequeMethodTest, InsertMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 0);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-
-        //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-        //std::cout << "\n";
     }
 
     {
@@ -1498,7 +1390,6 @@ TEST(MyDequeMethodTest, InsertMetodTrivialAllocate) {
         EXPECT_NO_THROW({ for (size_t i = 0; i < 40; ++i) {
             dequeInt1.insert(std::begin(dequeInt1) + i + 1, i);
         }; });
-        //std::ranges::copy(dequeInt1, std::ostream_iterator<int>(std::cout, " "));
         EXPECT_EQ(dequeInt1.size(), 42);
         EXPECT_EQ(dequeInt1.capasity(), 84);
     }
@@ -1560,9 +1451,6 @@ TEST(MyDequeMethodTest, InsertMetodItheratorMath) {
     EXPECT_TRUE(contrInt1.getLastBlock() == 4);
     EXPECT_EQ(*(std::begin(contrInt1) + 6), 91);
     EXPECT_EQ(*(std::crbegin(contrInt1) + 1), 94);
-
-    //std::ranges::copy(contrInt1, std::ostream_iterator<int>(std::cout, " "));
-    //std::cout << "\n" << contrInt1.size() << " " << contrInt1.capasity() << "\n";
 }
 
 TEST(MyDequeMethodTest, InsertMetodItheratorAllocate) {
@@ -1600,7 +1488,6 @@ TEST(MyDequeMethodTest, InsertMetodItheratorAllocate) {
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 1);
         ThrowingElement::max_success_allocs = 20;
         ThrowingElement::max_moves_elem = 20;
-        //std::cout << ThrowingElement::max_success_allocs << " " << ThrowingElement::max_moves_elem << '\n';
         EXPECT_NO_THROW({ dequeThrow1.insert(std::begin(dequeThrow1), std::begin(deq1), std::begin(deq1) + 3);});
         EXPECT_EQ(dequeThrow1.size(), 3);
         EXPECT_EQ(dequeThrow1.capasity(), 15);
@@ -1650,7 +1537,6 @@ TEST(MyDequeMethodTest, InsertMetodItheratorAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-        //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
     }
     {
         std::vector<int> vec1(std::views::iota(0, 40).begin(), std::views::iota(0, 40).end());
@@ -1696,7 +1582,6 @@ TEST(MyDequeMethodTest, emplase_frontMetodTrivialMath) {
     Deque::MyDeque<int, MyPmrAllocatorInt, sizeElemMap> contrInt1;
     std::vector<int> vecInt1({ 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70 });
     auto itBegin = std::crbegin(vecInt1);
-    //contrInt1.push_back(77);
     for (size_t i = 1; i < 5; ++i) {
         contrInt1.emplace_front(*itBegin);
         ++itBegin;
@@ -1716,11 +1601,8 @@ TEST(MyDequeMethodTest, emplase_frontMetodTrivialMath) {
     EXPECT_TRUE(contrInt1.getSizeMap() == 6);
     EXPECT_TRUE(contrInt1.getFirstBlock() == 0);
     EXPECT_TRUE(contrInt1.getLastBlock() == 3);
-    //std::ranges::copy(contrInt1, std::ostream_iterator<int>(std::cout, " "));
-    //std::cout << "\n";
     auto itDeqEnd = std::cbegin(contrInt1);
     for (size_t i = 0; i < 24; ++i) {
-        //std::cout << "("<< *itDeqEnd << "; " << i << ")\n";
         EXPECT_EQ(*itDeqEnd, 93 - i);
         ++itDeqEnd;
     }
@@ -1760,12 +1642,9 @@ TEST(MyDequeMethodTest, emplase_frontMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 1);
         ThrowingElement::max_success_allocs = 17;
         ThrowingElement::max_moves_elem = 20;
-        //std::cout << dequeThrow1.begin().getFirstI() << " " << dequeThrow1.begin().getFirstJ() << '\n';
         EXPECT_NO_THROW({ for (size_t i = 0; i < 4; ++i) {
-            //std::cout << "ThrowingElement::construct_count - " << ThrowingElement::construct_count << "\n";
             dequeThrow1.emplace_front(ThrowingElement());
         }; });
-        //std::cout << dequeThrow1.begin().getFirstI() << " " << dequeThrow1.begin().getFirstJ() << '\n';
         EXPECT_EQ(dequeThrow1.size(), 6);
         EXPECT_EQ(dequeThrow1.capasity(), 30);
         EXPECT_TRUE(dequeThrow1.getSizeMap() == 3);
@@ -1799,9 +1678,7 @@ TEST(MyDequeMethodTest, emplase_frontMetodTrivialAllocate) {
         std::ranges::transform(contrContr1, std::begin(contrContr1), [](auto&& it) {static int r = 0; r++;
         return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));
             });
-        //std::cout << contrContr1.begin().getFirstI() << " " << contrContr1.begin().getFirstJ() << '\n';
         EXPECT_NO_THROW({for (size_t i = 0; i < 5; ++i) {
-            //std::cout << "ThrowingElement::construct_count - " << ThrowingElement::construct_count << "\n";
             contrContr1.emplace_front(Controllable(10 + i, static_cast<float>(10 + i), (std::string{ "element" } + std::to_string(10 + i))));
         }; });
         EXPECT_EQ(contrContr1.size(), 14);
@@ -1809,7 +1686,6 @@ TEST(MyDequeMethodTest, emplase_frontMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-        //std::cout << contrContr1.begin().getFirstI() << " " << contrContr1.begin().getFirstJ() << '\n';
 
         FaultyAllocator::BadMemoryResource::max_size = 1;
         EXPECT_THROW({ contrContr1.emplace_front(Controllable(15, 15.f, (std::string{ "element15" }))); }, std::bad_alloc);
@@ -1818,16 +1694,12 @@ TEST(MyDequeMethodTest, emplase_frontMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-
-        //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-        //std::cout << "\n";
     }
     {
         MyDequePmrAllocInt dequeInt1(2, int{}, allocInt);
         EXPECT_NO_THROW({ for (size_t i = 0; i < 40; ++i) {
             dequeInt1.emplace_front(i);
         }; });
-        //std::ranges::copy(dequeInt1, std::ostream_iterator<int>(std::cout, " "));
         EXPECT_EQ(dequeInt1.size(), 42);
         EXPECT_EQ(dequeInt1.capasity(), 120);
     }
@@ -1864,13 +1736,10 @@ TEST(MyDequeMethodTest, emplase_backMetodTrivialMath) {
     EXPECT_TRUE(deqContr1.getSizeMap() == 6);
     EXPECT_TRUE(deqContr1.getFirstBlock() == 2);
     EXPECT_TRUE(deqContr1.getLastBlock() == 5);
-    //std::ranges::copy(deqContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-    //std::cout << "\n";
 
     Deque::MyDeque<int, MyPmrAllocatorInt, sizeElemMap> contrInt1;
     std::vector<int> vecInt1({ 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80 });
     auto itBegin = std::begin(vecInt1);
-    //contrInt1.push_back(77);
     for (size_t i = 1; i < 4; ++i) {
         contrInt1.emplace_back(*itBegin);
         ++itBegin;
@@ -1881,7 +1750,6 @@ TEST(MyDequeMethodTest, emplase_backMetodTrivialMath) {
     EXPECT_TRUE(contrInt1.getFirstBlock() == 1);
     EXPECT_TRUE(contrInt1.getLastBlock() == 1);
 
-    //itBegin += 8;
     for (size_t i = 0; i < 8; ++i) {
         contrInt1.emplace_back(*itBegin);
         ++itBegin;
@@ -1891,11 +1759,8 @@ TEST(MyDequeMethodTest, emplase_backMetodTrivialMath) {
     EXPECT_TRUE(contrInt1.getSizeMap() == 6);
     EXPECT_TRUE(contrInt1.getFirstBlock() == 2);
     EXPECT_TRUE(contrInt1.getLastBlock() == 4);
-    //std::ranges::copy(contrInt1, std::ostream_iterator<int>(std::cout, " "));
-    //std::cout << "\n";
     auto itDeqEnd = std::crbegin(contrInt1);
     for (size_t i = 0; i < 11; ++i) {
-        //std::cout << "("<< *itDeqEnd << "; " << i << ")\n";
         EXPECT_EQ(*itDeqEnd, 89 + i);
         ++itDeqEnd;
     }
@@ -1935,12 +1800,9 @@ TEST(MyDequeMethodTest, emplase_backMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 1);
         ThrowingElement::max_success_allocs = 17;
         ThrowingElement::max_moves_elem = 20;
-        //std::cout << dequeThrow1.begin().getFirstI() << " " << dequeThrow1.begin().getFirstJ() << '\n';
         EXPECT_NO_THROW({ for (size_t i = 0; i < 4; ++i) {
-            //std::cout << "ThrowingElement::construct_count - " << ThrowingElement::construct_count << "\n";
             dequeThrow1.emplace_back(ThrowingElement());
         }; });
-        //std::cout << dequeThrow1.end().getFirstI() << " " << dequeThrow1.end().getFirstJ() << '\n';
         EXPECT_EQ(dequeThrow1.size(), 6);
         EXPECT_EQ(dequeThrow1.capasity(), 30);
         EXPECT_TRUE(dequeThrow1.getSizeMap() == 3);
@@ -1973,9 +1835,7 @@ TEST(MyDequeMethodTest, emplase_backMetodTrivialAllocate) {
         std::ranges::transform(contrContr1, std::begin(contrContr1), [](auto&& it) {static int r = 0; r++;
         return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));
             });
-        //std::cout << contrContr1.end().getFirstI() << " " << contrContr1.end().getFirstJ() << '\n';
         EXPECT_NO_THROW({ for (size_t i = 0; i < 6; ++i) {
-            //std::cout << "ThrowingElement::construct_count - " << ThrowingElement::construct_count << "\n";
             contrContr1.emplace_back(Controllable(10 + i, static_cast<float>(10 + i), (std::string{ "element" } + std::to_string(10 + i))));
         }; });
         EXPECT_EQ(contrContr1.size(), 15);
@@ -1983,7 +1843,6 @@ TEST(MyDequeMethodTest, emplase_backMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-        //std::cout << contrContr1.end().getFirstI() << " " << contrContr1.end().getFirstJ() << '\n';
 
         FaultyAllocator::BadMemoryResource::max_size = 1;
         EXPECT_THROW({ contrContr1.emplace_back(Controllable(15, 15.f, (std::string{ "element15" }))); }, std::bad_alloc);
@@ -1992,16 +1851,12 @@ TEST(MyDequeMethodTest, emplase_backMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-
-        //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-        //std::cout << "\n";
     }
     {
         MyDequePmrAllocInt dequeInt1(2, int{}, allocInt);
         EXPECT_NO_THROW({ for (size_t i = 0; i < 40; ++i) {
             dequeInt1.emplace_back(i);
         }; });
-        //std::ranges::copy(dequeInt1, std::ostream_iterator<int>(std::cout, " "));
         EXPECT_EQ(dequeInt1.size(), 42);
         EXPECT_EQ(dequeInt1.capasity(), 120);
     }
@@ -2040,14 +1895,11 @@ TEST(MyDequeMethodTest, emplaseMetodTrivialMath) {
     EXPECT_EQ(*(std::rbegin(deqContr1)), Controllable(1, 1.f, std::string("element1")));
     EXPECT_EQ(*(std::begin(deqContr1) + 7), Controllable(7, 7.f, std::string("element7")));
     EXPECT_EQ(*(std::rbegin(deqContr1) + 5), Controllable(13, 13.f, std::string("element13")));
-    //std::ranges::copy(deqContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-    //std::cout << "\n";
 
     Deque::MyDeque<int, MyPmrAllocatorInt, sizeElemMap> contrInt1;
     std::vector<int> vecInt1({ 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70 });
     auto itBegin = std::crbegin(vecInt1);
     auto itBeginDeq = std::cbegin(contrInt1);
-    //contrInt1.push_back(77);
     for (size_t i = 1; i < 5; ++i) {
         contrInt1.emplace(itBeginDeq, *itBegin);
         ++itBegin;
@@ -2067,12 +1919,9 @@ TEST(MyDequeMethodTest, emplaseMetodTrivialMath) {
     EXPECT_TRUE(contrInt1.getSizeMap() == 6);
     EXPECT_TRUE(contrInt1.getFirstBlock() == 1);
     EXPECT_TRUE(contrInt1.getLastBlock() == 3);
-    //std::ranges::copy(contrInt1, std::ostream_iterator<int>(std::cout, " "));
-    //std::cout << "\n";
     auto itDeqEnd = std::cbegin(contrInt1);
     ++itDeqEnd;
     for (size_t i = 0; i < 20; ++i) {
-        //std::cout << "("<< *itDeqEnd << "; " << i << ")\n";
         EXPECT_EQ(*itDeqEnd, 93 - i - 1);
         ++itDeqEnd;
     }
@@ -2112,9 +1961,7 @@ TEST(MyDequeMethodTest, emplaseMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 1);
         ThrowingElement::max_success_allocs = 25;
         ThrowingElement::max_moves_elem = 25;
-        //std::cout << ThrowingElement::max_success_allocs << " " << ThrowingElement::max_moves_elem << '\n';
         EXPECT_NO_THROW({ for (size_t i = 0; i < 7; ++i) {
-            //std::cout << "ThrowingElement::max_moves_elem - " << ThrowingElement::construct_count << "\n";
             dequeThrow1.emplace(std::begin(dequeThrow1) + i, ThrowingElement());
         }; });
         EXPECT_EQ(dequeThrow1.size(), 9);
@@ -2123,7 +1970,6 @@ TEST(MyDequeMethodTest, emplaseMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getFirstBlock() == 1);
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 2);
         ThrowingElement::max_moves_elem = 10;
-        //ThrowingElement::max_success_allocs = 10;
         EXPECT_THROW({dequeThrow1.emplace(std::cbegin(dequeThrow1), ThrowingElement());}, std::runtime_error);
         EXPECT_EQ(dequeThrow1.size(), 9);
         EXPECT_EQ(dequeThrow1.capasity(), 27);
@@ -2131,7 +1977,7 @@ TEST(MyDequeMethodTest, emplaseMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getFirstBlock() == 1);
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 2);
         ThrowingElement::max_moves_elem = 25;
-        //ThrowingElement::max_success_allocs = 25;
+        
         EXPECT_NO_THROW({ dequeThrow1.emplace(std::begin(dequeThrow1) + 6, ThrowingElement()); });
         EXPECT_EQ(dequeThrow1.size(), 10);
     }
@@ -2149,8 +1995,6 @@ TEST(MyDequeMethodTest, emplaseMetodTrivialAllocate) {
         std::ranges::transform(contrContr1, std::begin(contrContr1), [](auto&& it) {static int r = 0; r++;
         return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));
             });
-        //std::cout << "Start (" << contrContr1.cbegin().getFirstI() << " ; " << contrContr1.cbegin().getFirstJ() << ")   Finish (" 
-        //    << contrContr1.cend().getFirstI() << " ; " << contrContr1.cend().getFirstJ() << ")\n";
         EXPECT_NO_THROW({for (size_t i = 0; i < 3; ++i) {
             contrContr1.emplace((std::rbegin(contrContr1) + i).base(), 10 + i, static_cast<float>(10 + i), (std::string{ "element" } + std::to_string(10 + i)));
         }; });
@@ -2167,16 +2011,13 @@ TEST(MyDequeMethodTest, emplaseMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 3);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-
-        //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-        //std::cout << "\n";
     }
     {
         MyDequePmrAllocInt dequeInt1(2, int{}, allocInt);
         EXPECT_NO_THROW({ for (size_t i = 0; i < 40; ++i) {
             dequeInt1.emplace(std::begin(dequeInt1) + i + 1, i);
         }; });
-        //std::ranges::copy(dequeInt1, std::ostream_iterator<int>(std::cout, " "));
+      
         EXPECT_EQ(dequeInt1.size(), 42);
         EXPECT_EQ(dequeInt1.capasity(), 90);
     }
@@ -2208,7 +2049,7 @@ TEST(MyDequeMethodTest, eraseMetodTrivialMath) {
     EXPECT_TRUE(contrContr1.getSizeMap() == 4);
     EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
     EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-    //auto itBegContr = std::cbegin(contrContr1);
+    
     contrContr1.erase(std::cbegin(contrContr1) + 1);
     contrContr1.erase((std::crbegin(contrContr1) + 2).base());
     EXPECT_EQ(*(std::cbegin(contrContr1) + 1), Controllable(3, 3.f, std::string("element3")));
@@ -2267,9 +2108,8 @@ TEST(MyDequeMethodTest, eraseMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getFirstBlock() == 1);
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 2);
         ThrowingElement::max_moves_elem = 25;
-        //std::cout << ThrowingElement::max_success_allocs << " " << ThrowingElement::max_moves_elem << '\n';
+        
         EXPECT_NO_THROW({ for (size_t i = 0; i < 2; ++i) {
-            //std::cout << "ThrowingElement::max_moves_elem - " << ThrowingElement::construct_count << "\n";
             dequeThrow1.erase(std::begin(dequeThrow1) + i + 1);
         }; });
         EXPECT_EQ(dequeThrow1.size(), 6);
@@ -2308,7 +2148,6 @@ TEST(MyDequeMethodTest, eraseMetodTrivialAllocate) {
             EXPECT_EQ(*itBeg, 2 * i + 1);
             ++itBeg;
         }
-        //std::ranges::copy(dequeInt1, std::ostream_iterator<int>(std::cout, " "));
         EXPECT_EQ(dequeInt1.size(), 32);
         EXPECT_EQ(dequeInt1.capasity(), 84);
     }
@@ -2404,7 +2243,6 @@ TEST(MyDequeMethodTest, eraseMetodItheratorAllocate) {
         EXPECT_TRUE(dequeThrow1.getFirstBlock() == 1);
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 2);
         ThrowingElement::max_moves_elem = 25;
-        //std::cout << ThrowingElement::max_success_allocs << " " << ThrowingElement::max_moves_elem << '\n';
         EXPECT_NO_THROW({ dequeThrow1.erase(std::begin(dequeThrow1) + 1, std::begin(dequeThrow1) + 4);});
         EXPECT_EQ(dequeThrow1.size(), 6);
         EXPECT_EQ(dequeThrow1.capasity(), 36);
@@ -2452,7 +2290,6 @@ TEST(MyDequeMethodTest, eraseMetodItheratorAllocate) {
             EXPECT_EQ(*itRBeg, 35 - i);
             ++itRBeg;
         }
-        //std::ranges::copy(dequeInt1, std::ostream_iterator<int>(std::cout, " "));
         EXPECT_EQ(dequeInt1.size(), 30);
         EXPECT_EQ(dequeInt1.capasity(), 90);
     }
@@ -2507,8 +2344,6 @@ TEST(MyDequeMethodTest, reserveMetodTrivialMath) {
     EXPECT_TRUE(contrContr1.getSizeMap() == 5);
     EXPECT_TRUE(contrContr1.getFirstBlock() == 2);
     EXPECT_TRUE(contrContr1.getLastBlock() == 3);
-    //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-    //std::cout << "\n";
 }
 
 TEST(MyDequeMethodTest, reserveMetodTrivialAllocate) {
@@ -2574,8 +2409,6 @@ TEST(MyDequeMethodTest, reserveMetodTrivialAllocate) {
         std::ranges::transform(contrContr1, std::begin(contrContr1), [](auto&& it) {static int r = 0; r++;
         return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));
             });
-        //std::cout << "Start (" << contrContr1.cbegin().getFirstI() << " ; " << contrContr1.cbegin().getFirstJ() << ")   Finish (" 
-        //    << contrContr1.cend().getFirstI() << " ; " << contrContr1.cend().getFirstJ() << ")\n";
         EXPECT_NO_THROW({ contrContr1.reserve(33); });
         EXPECT_EQ(contrContr1.size(), 9);
         EXPECT_EQ(contrContr1.capasity(), 35);
@@ -2590,13 +2423,10 @@ TEST(MyDequeMethodTest, reserveMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 5);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
         EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-        //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-        //std::cout << "\n";
     }
     {
         MyDequePmrAllocInt dequeInt1(30, int{}, allocInt);
         EXPECT_NO_THROW({ dequeInt1.reserve(89); });
-        //std::ranges::copy(dequeInt1, std::ostream_iterator<int>(std::cout, " "));
         EXPECT_EQ(dequeInt1.size(), 30);
         EXPECT_EQ(dequeInt1.capasity(), 91);
     }
@@ -2642,8 +2472,6 @@ TEST(MyDequeMethodTest, resizeMetodTrivialMath) {
     EXPECT_TRUE(contrContr1.getSizeMap() == 4);
     EXPECT_TRUE(contrContr1.getFirstBlock() == 1);
     EXPECT_TRUE(contrContr1.getLastBlock() == 2);
-    //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-    //std::cout << "\n";
 
     Deque::MyDeque<int, std::allocator<int>, sizeElemMap> contrInt1(0);
     EXPECT_EQ(contrInt1.size(), 0);
@@ -2708,7 +2536,7 @@ TEST(MyDequeMethodTest, resizeMetodTrivialAllocate) {
         EXPECT_TRUE(dequeThrow1.getLastBlock() == 2);
         ThrowingElement::max_success_allocs = 25;
         ThrowingElement::max_moves_elem = 25;
-        //std::cout << ThrowingElement::max_success_allocs << " " << ThrowingElement::max_moves_elem << '\n';
+        
         EXPECT_NO_THROW({ dequeThrow1.resize(6); });
         EXPECT_EQ(dequeThrow1.size(), 6);
         EXPECT_EQ(dequeThrow1.capasity(), 32);
@@ -2740,8 +2568,6 @@ TEST(MyDequeMethodTest, resizeMetodTrivialAllocate) {
         std::ranges::transform(contrContr1, std::begin(contrContr1), [](auto&& it) {static int r = 0; r++;
         return (Controllable(r, static_cast<float>(r), (std::string{ "element" } + std::to_string(r))));
             });
-        //std::cout << "Start (" << contrContr1.cbegin().getFirstI() << " ; " << contrContr1.cbegin().getFirstJ() << ")   Finish (" 
-        //    << contrContr1.cend().getFirstI() << " ; " << contrContr1.cend().getFirstJ() << ")\n";
         EXPECT_NO_THROW({ contrContr1.resize(13, Controllable(0, 0.f, std::string{ "element0" })); });
         EXPECT_EQ(contrContr1.size(), 13);
         EXPECT_EQ(contrContr1.capasity(), 48);
@@ -2756,9 +2582,6 @@ TEST(MyDequeMethodTest, resizeMetodTrivialAllocate) {
         EXPECT_TRUE(contrContr1.getSizeMap() == 6);
         EXPECT_TRUE(contrContr1.getFirstBlock() == 2);
         EXPECT_TRUE(contrContr1.getLastBlock() == 4);
-
-        //std::ranges::copy(contrContr1 | std::views::transform([](const Controllable& u) { return u.f; }), std::ostream_iterator<float>(std::cout, " "));
-        //std::cout << "\n";
     }
     {
         MyDequePmrAllocInt dequeInt1(2, 2, allocInt);
@@ -2816,27 +2639,3 @@ TEST(MyDequeMethodTest, clearMetodTrivialMath) {
     EXPECT_TRUE(contrContr1.getFirstBlock() == 2);
     EXPECT_TRUE(contrContr1.getLastBlock() == 2);
 }
-
-//{
-//    ExeptAllocatorInt::should_throw_on_move = true;
-//    bool exception_caught = false;
-//
-//    try {
-//        dequeExcept2 = std::move(dequeExcept1);
-//    }
-//    catch (const std::exception& e) {
-//        exception_caught = true;
-//
-//        // КРИТИЧЕСКИЙ ШАГ: Немедленно выключаем флаг, как только поймали исключение!
-//        ExeptAllocatorInt::should_throw_on_move = false;
-//
-//        // Чтобы предотвратить Double Free и зависание в деструкторах поврежденных деков,
-//        // мы вручную сбрасываем их в безопасное "пустое" состояние прямо здесь.
-//        // Благодаря этому деструкторы при выходе из {} не будут трогать память.
-//        dequeExcept1.clear();
-//        dequeExcept2.clear();
-//    }
-//
-//    // Проверяем, что исключение действительно было выброшено
-//    EXPECT_TRUE(exception_caught) << "Expected an exception from allocator move assignment, but none was thrown.";
-//}
