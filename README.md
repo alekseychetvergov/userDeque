@@ -66,6 +66,20 @@ cmake --preset x64-release
 cmake --build --preset x64-release
 ```
 
+Сборка и запуск на Linux в режиме Debug `linux-debug`
+
+``` Linux CMD
+cmake --preset linux-debug
+cmake --build --preset linux-debug
+```
+
+Сборка и запуск на Linux в режиме Release `linux-release`
+
+``` Linux CMD
+cmake --preset linux-release
+cmake --build --preset linux-release
+```
+
 Сборка создаётся в `out/build/x64-debug` или `out/build/x64-release`. Команда сборки по умолчанию собирает тесты и пример.
 
 ## Запуск тестов
@@ -74,6 +88,10 @@ cmake --build --preset x64-release
 
 ```powershell
 ctest --test-dir out/build/x64-debug --output-on-failure
+```
+или
+``` Linux CMD
+ctest --test-dir out/build/linux-debug -V
 ```
 
 Чтобы запустить один тест GoogleTest, можно передать фильтр исполняемому файлу напрямую. Например:
@@ -86,6 +104,10 @@ ctest --test-dir out/build/x64-debug --output-on-failure
 
 ```powershell
 .\out\build\x64-debug\tests\deque_tests.exe
+```
+или
+``` Linux CMD
+./out/build/linux-debug/examples/deque_example
 ```
 
 ## Пример из `examples`
