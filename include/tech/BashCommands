@@ -1,0 +1,42 @@
+##1##Устанавливаем пакеты GCC, CMake, Ninja, утилиты для vcpkg##
+
+sudo apt update
+sudo apt install -y git build-essential cmake ninja-build curl zip unzip tar pkg-config
+
+##2##Устанавливаем и собираем vcpkg##
+cd ~
+git clone https://github.com
+./vcpkg/bootstrap-vcpkg.sh
+
+##3##Настраиваем переменные окружения VCPKG_ROOT и PATH##
+
+echo 'export VCPKG_ROOT="$HOME/vcpkg"' >> ~/.bashrc
+echo 'export PATH="$VCPKG_ROOT:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+##4##Клонируем Репозиторий##
+
+mkdir -p ~/VSCodeProject
+cd ~/VSCodeProject
+git clone https://github.com
+cd userDeque
+
+##5##Собираем и запускаем Debug##
+
+cmake --preset linux-debug
+cmake --build --preset linux-debug
+
+./out/build/linux-debug/tests/deque_tests
+
+ctest --test-dir out/build/linux-debug -V
+
+./out/build/linux-debug/examples/deque_example
+
+##6##Собираем и запускаем Release##
+
+cmake --preset linux-release
+cmake --build --preset linux-release
+
+./out/build/linux-release/tests/deque_tests
+
+./out/build/linux-release/examples/deque_example
