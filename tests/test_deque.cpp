@@ -101,7 +101,7 @@ TEST(MyDequeConstructorTest, SizeConstructorAllocate) {
     MockMemoryResource mock_res_throw;
     MyPmrAllocatorThrow alloc_throw(&mock_res_throw);
     EXPECT_THROW({MyDequePMRAllocThrowElem bad_deque(10, ThrowingElement(), alloc_throw);}, std::runtime_error);
-    EXPECT_NO_THROW({ MyDequePMRAllocThrowElem bad_deque(4, ThrowingElement(), alloc_throw); }, std::runtime_error);
+    EXPECT_NO_THROW({ MyDequePMRAllocThrowElem bad_deque(4, ThrowingElement(), alloc_throw); });
 
     EXPECT_EQ(mock_res_throw.active_allocations, 0);
     EXPECT_EQ(mock_res_throw.deallocate_calls, mock_res_throw.allocate_calls);

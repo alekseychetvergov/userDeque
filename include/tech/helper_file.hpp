@@ -12,15 +12,15 @@ namespace FaultyAllocator {
     class FaultyAllocator : public std::allocator<T> {
     public:
         T* allocate(std::size_t n) {
-            throw std::bad_alloc(); // Нарочно имитируем нехватку памяти
+            throw std::bad_alloc(); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         }
     };
 
     class MockMemoryResource : public PmrAllocator::MyMemoryResource {
     public:
-        size_t allocate_calls = 0;   // Сколько раз просили память
-        size_t deallocate_calls = 0; // Сколько раз возвращали память
-        size_t active_allocations = 0; // Сколько блоков занято прямо сейчас
+        size_t allocate_calls = 0;   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        size_t deallocate_calls = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        size_t active_allocations = 0; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
         virtual void* allocate(size_t bytes, size_t alignment = alignof(std::max_align_t)) override {
             allocate_calls++;
@@ -36,14 +36,14 @@ namespace FaultyAllocator {
             PmrAllocator::MyMemoryResource::deallocate(ptr, bytes, alignment);
         }
 
-        // Метод для проверки, что вся память была возвращена ресурсу
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         bool has_leaks() const {
             return active_allocations != 0;
         }
     };
     class BadMemoryResource : public PmrAllocator::MyMemoryResource {
     public:
-        static inline size_t max_size = 500;   // Сколько раз просили память
+        static inline size_t max_size = 500;   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
         virtual void* allocate(size_t bytes, size_t alignment = alignof(std::max_align_t)) override {
             if (bytes > max_size) throw std::bad_alloc();
@@ -57,7 +57,7 @@ namespace FaultyAllocator {
         }
         ~BadMemoryResource() = default;
 
-        // Сравнение ресурсов (два разных ресурса не могут освобождать память друг друга)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
         bool is_equal(const MyMemoryResource & other) const noexcept {
             return this == &other;
         }
@@ -74,11 +74,11 @@ namespace FaultyAllocator {
         ExeptAllocator() noexcept = default;
         ExeptAllocator(const ExeptAllocator&) = default;
 
-        // Шаблонный конструктор копирования для rebind
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ rebind
         template <typename U>
         ExeptAllocator(const ExeptAllocator<U>&) noexcept {}
 
-        // 1. ШАБЛОННЫЙ конструктор перемещения (перехватит любой тип при rebind)
+        // 1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ rebind)
         template <typename U>
         ExeptAllocator(ExeptAllocator<U>&&) noexcept(false) {
             if (should_throw_on_move) {
@@ -87,7 +87,7 @@ namespace FaultyAllocator {
             }
         }
 
-        // Обычный конструктор перемещения (требуется для явного std::move)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ std::move)
         ExeptAllocator(ExeptAllocator&&) noexcept(false) {
             if (should_throw_on_move) {
                 //std::cout << "ExeptAllocator(ExeptAllocator&&) - throw std::overflow_error\n";
@@ -95,8 +95,8 @@ namespace FaultyAllocator {
             }
         }
 
-        // 2. ШАБЛОННЫЙ оператор перемещающего присваивания
-        // Он гарантированно сработает, даже если STL подменит тип T на T* при перемещении буфера
+        // 2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ STL пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ T пїЅпїЅ T* пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         template <typename U>
         ExeptAllocator& operator=(ExeptAllocator<U>&& rhs) noexcept(false) {
             if (should_throw_on_move) {
@@ -106,7 +106,7 @@ namespace FaultyAllocator {
             return *this;
         }
 
-        // Обычный оператор перемещающего присваивания
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         ExeptAllocator& operator=(ExeptAllocator&& rhs) noexcept(false) {
             if (should_throw_on_move) {
                 //std::cout << "ExeptAllocator& operator=(ExeptAllocator&& rhs) - throw std::invalid_argument\n";
@@ -160,8 +160,8 @@ namespace userClass {
 
     struct ThrowingElement {
         static inline int construct_count = 0;
-        static inline int max_success_allocs = 5; // Упадет на 6-м элементе
-        static inline int max_moves_elem = 100; // Упадет на 6-м элементе при перемещении
+        static inline int max_success_allocs = 5; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 6-пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        static inline int max_moves_elem = 100; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 6-пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
         ThrowingElement() { ++construct_count;
             //std::cout << "DefCtor++construct_count ("<< construct_count << ")\n";
@@ -188,6 +188,7 @@ namespace userClass {
                 throw std::runtime_error("Copy operator= constructor failure!");
             }
             //std::cout << "Copy operator= construct_count (" << construct_count << ")\n";
+            return *this;
         }
 
         ThrowingElement operator=(ThrowingElement&&) {
@@ -195,6 +196,7 @@ namespace userClass {
                 throw std::runtime_error("Move operator= constructor failure!");
             }
             //std::cout << "Move operator= construct_count " << construct_count << "\n";
+            return *this;
         }
 
         ~ThrowingElement() { --construct_count; 

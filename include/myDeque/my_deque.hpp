@@ -56,7 +56,7 @@ namespace Deque {
 
         using Base = MyDequeBuff<T, Allocator, CHUNK_SIZE>;
 
-        using Base::allocator_type;
+        using allocator_type = typename Base::allocator_type;
         using Base::alloc_;
         using Base::map_;
         using Base::size_map_;
@@ -65,8 +65,8 @@ namespace Deque {
         using Base::last_block_;
         using Base::allocate_block;
         using Base::deallocate_block;
-        using Base::traits_type;
-        using Base::map_traits_type;
+        using traits_type = typename Base::traits_type;
+        using map_traits_type = typename Base::map_traits_type;
 
         using Base::getSizeMap;
         using Base::getSizeElemMap;
@@ -93,7 +93,7 @@ namespace Deque {
         MyDeque(const Allocator& alloc = Allocator());
         explicit MyDeque(size_t count, const T& value = T(), const Allocator& alloc = Allocator());
         MyDeque(const MyDeque& rhs);
-        MyDeque(MyDeque&& rhs) noexcept(std::is_nothrow_move_constructible_v<Allocator>);
+        MyDeque(MyDeque&& rhs) noexcept(std::is_nothrow_move_constructible_v<Allocator> && std::is_nothrow_move_constructible_v<Base>);
         MyDeque(std::initializer_list<T> init, const Allocator& alloc = Allocator());
 
         template <typename InputIterator,
@@ -391,7 +391,7 @@ namespace Deque {
     }
 
     template <typename T, typename Allocator, size_t CHUNK_SIZE>
-    MyDeque<T, Allocator, CHUNK_SIZE>::MyDeque(MyDeque&& rhs) noexcept(std::is_nothrow_move_constructible_v<Allocator>)
+    MyDeque<T, Allocator, CHUNK_SIZE>::MyDeque(MyDeque&& rhs) noexcept(std::is_nothrow_move_constructible_v<Allocator> && std::is_nothrow_move_constructible_v<Base>)
         try : Base(std::move(rhs)), capasity_(rhs.capasity_),
         size_(rhs.size_), capac_size_ratio_(rhs.capac_size_ratio_), last_index_i(rhs.last_index_i),
         last_index_j(rhs.last_index_j), start(rhs.start), finish(rhs.finish)
