@@ -40,7 +40,7 @@ namespace Deque {
     class MyDeque : private MyDequeBuff<T, Allocator, CHUNK_SIZE> {
         static_assert(CHUNK_SIZE > 0, "CHUNK_SIZE must be greater than zero");
     public:
-        // Обязательные типы для STL-совместимости контейнера
+
         using value_type = T;
         using pointer = T*;
         using const_pointer = const T*;
@@ -123,10 +123,8 @@ namespace Deque {
         void pop_front();
 
         reference front();
-        // Константная версия (только для чтения)
         const_reference front() const;
         reference back();
-        // Константная версия (только для чтения)
         const_reference back() const;
 
         iterator insert(const_iterator position, const T& value);
@@ -161,7 +159,6 @@ namespace Deque {
         const_iterator cbegin() const noexcept { return begin(); }
         const_iterator cend() const noexcept { return end(); }
 
-        // Обратные итераторы
         reverse_iterator rbegin() noexcept { return reverse_iterator(finish); }
         reverse_iterator rend() noexcept { return reverse_iterator(start); }
 
@@ -176,7 +173,6 @@ namespace Deque {
     void MyDeque<T, Allocator, CHUNK_SIZE>::init_blank_memory(size_t count) {
         size_t new_size_map = (count / CHUNK_SIZE) < 5 ? (count / CHUNK_SIZE) + 3 : (count / CHUNK_SIZE) * 2;
 
-        // 1. Создаем временный буфер (выделяется память только под карту map_)
         MyDequeBuff<T, Allocator, CHUNK_SIZE> new_buf(new_size_map, this->alloc_);
 
         size_t new_capas = new_size_map * CHUNK_SIZE;
@@ -194,11 +190,10 @@ namespace Deque {
             ? max_allocated_block - 1
             : first_index_i;
 
-        // 2. ВЫДЕЛЯЕМ СЫРЫЕ БЛОКИ (ЧАНКИ). Это увеличит allocate_calls!
         size_t allocated_up_to = first_index_i;
         try {
             for (size_t i = first_index_i; i < max_allocated_block; ++i) {
-                new_buf.map_[i] = new_buf.allocate_block(); // <--- ТУТ ВЫЗОВЕТСЯ ALLOCATE
+                new_buf.map_[i] = new_buf.allocate_block(); 
                 allocated_up_to = i + 1;
             }
         }
@@ -210,13 +205,11 @@ namespace Deque {
             }
             throw;
         }
-        // 3. БЕЗОПАСНЫЙ РУЧНОЙ ПЕРЕНОС В *THIS
         this->map_ = new_buf.map_;
         this->size_map_ = new_buf.size_map_;
         this->first_block_ = new_buf.first_block_;
         this->last_block_ = new_buf.last_block_;
 
-        // Обязательно зануляем временный объект, чтобы его деструктор не стёр память
         new_buf.map_ = nullptr;
         new_buf.size_map_ = 0;
         new_buf.first_block_ = 0;
@@ -225,7 +218,6 @@ namespace Deque {
         capasity_ = new_capas;
         size_ = count;
 
-        // 4. Настраиваем итераторы на СВОЮ новую карту
         start.setBlock(&map_[first_index_i], first_index_i, first_index_j);
         finish.setBlock(&map_[last_index_i], last_index_i, last_index_j);
         last_index_i = finish.first_index_i;
@@ -249,16 +241,13 @@ namespace Deque {
         size_t new_first_block = (newCapas / 2 - size_ / 2) / CHUNK_SIZE;
         size_t new_last_block = new_first_block + (last_block_ - first_block_);
 
-        // 2. КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Копируем блоки только если старая карта существовала!
         if (map_ != nullptr) {
             for (size_t old_i = first_block_, new_i = new_first_block; old_i <= last_block_; ++old_i, ++new_i) {
                 new_buf.map_[new_i] = map_[old_i];
-                map_[old_i] = nullptr; // Зануляем в старой карте
+                map_[old_i] = nullptr; 
             }
         }
         else {
-            // ЕСЛИ СТАРЫЙ ДЕК БЫЛ ПУСТ (после move):
-            // Сразу выделим центральный чанк, чтобы итераторы start и finish инициализировались валидными адресами!
             new_buf.map_[new_first_block] = new_buf.allocate_block();
         }
         new_buf.first_block_ = new_first_block;
@@ -266,9 +255,6 @@ namespace Deque {
 
         size_t block_offset = new_first_block - first_block_;
 
-        // 3. КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Вместо std::swap всего класса (который вызывает оператор=),
-        // мы вручную и гарантированно без исключений меняем ТОЛЬКО указатели и размеры.
-        // Аллокатор при этом остается на месте и не трогается!
         std::swap(this->map_, new_buf.map_);
         std::swap(this->size_map_, new_buf.size_map_);
         std::swap(this->first_block_, new_buf.first_block_);
@@ -276,7 +262,6 @@ namespace Deque {
 
         capasity_ = newCapas;
 
-        //auto 
         auto nfi = start.first_index_i + block_offset;
         auto nfj = start.first_index_j;
         last_index_i = finish.first_index_i + block_offset;
@@ -305,28 +290,25 @@ namespace Deque {
         last_block_ = max_allocated_block > first_index_i
             ? max_allocated_block - 1
             : first_index_i;
-        // 1. ЗАЩИТА №1: Выделение сырых блоков памяти
-        size_t allocated_up_to = first_index_i; // Запоминаем, до какого индекса выделили память
+        size_t allocated_up_to = first_index_i; 
         try {
             for (size_t i = first_index_i; i < max_allocated_block; ++i) {
                 map_[i] = allocate_block();
-                allocated_up_to = i + 1; // Успешно выделили текущий блок
+                allocated_up_to = i + 1; 
             }
         }
         catch (...) {
-            // Если allocate_block() выбросил исключение, чистим только то, что успели выделить
             for (size_t i = first_index_i; i < allocated_up_to; ++i) {
                 if (map_[i] != nullptr) {
                     deallocate_block(map_[i]);
                     map_[i] = nullptr;
                 }
             }
-            throw; // Перевыбрасываем исключение bad_alloc дальше пользователю
+            throw;
         }
         start.setBlock(&map_[first_index_i], first_index_i, first_index_j);
         finish.setBlock(&map_[last_index_i], last_index_i, last_index_j);
 
-        // 2. ЗАЗАЩИТА №2: Заполняем блоки объектами T
         auto it = start;
         try {
             while (it != finish) {
@@ -335,10 +317,8 @@ namespace Deque {
             }
         }
         catch (...) {
-            // Если упал конструктор самого объекта T, уничтожаем созданные объекты
             destroy(start, it);
 
-            // И очищаем ВСЕ выделенные на шаге 1 сырые блоки памяти
             for (size_t i = first_index_i; i < max_allocated_block; ++i) {
                 if (map_[i] != nullptr) {
                     deallocate_block(map_[i]);
@@ -369,9 +349,9 @@ namespace Deque {
             init_blank_memory(0);
             return;
         }
-        // Теперь этот вызов создаст полностью независимую структуру памяти в куче
+
         init_blank_memory(rhs.size_);
-        // Безопасно копируем объекты T в изолированные новые чанки
+
         auto it_dest = start;
         auto it_src = rhs.start;
         try {
@@ -383,8 +363,6 @@ namespace Deque {
         }
         catch (...) {
             destroy(start, it_dest);
-            // Вызывать вручную deallocate_block здесь НЕ НАДО! 
-            // Деструктор базового класса MyDequeBuff сделает это автоматически при раскрутке стека.
             size_ = 0;
             throw;
         }
