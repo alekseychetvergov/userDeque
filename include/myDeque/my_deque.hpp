@@ -374,8 +374,6 @@ namespace Deque {
         size_(rhs.size_), capac_size_ratio_(rhs.capac_size_ratio_), last_index_i(rhs.last_index_i),
         last_index_j(rhs.last_index_j), start(rhs.start), finish(rhs.finish)
     {
-        // Обязательно сбрасываем rhs в валидное пустое состояние,
-        // чтобы его деструктор случайно не удалил наши новые блоки
         rhs.capasity_ = 0;
         rhs.size_ = 0;
         rhs.last_index_i = 0;
@@ -394,21 +392,16 @@ namespace Deque {
         if (this == &rhs) {
             return *this;
         }
-        // Проверяем: могут ли наши аллокаторы освобождать память друг друга?
         if constexpr (traits_type::propagate_on_container_copy_assignment::value) {
-            // Если стандарт разрешает скопировать аллокатор:
             MyDeque tmp(rhs);
             *this = std::move(tmp);
         }
         else if (this->alloc_ == rhs.alloc_) {
-            // Если аллокаторы разные по сути, но эквивалентны (работают с одним ресурсом)
             MyDeque tmp(rhs);
             *this = std::move(tmp);
         }
         else {
-            // 1. Создаем временный дек, используя НАШ текущий аллокатор
             MyDeque tmp(rhs.begin(), rhs.end(), this->alloc_);
-            // 2. Обмениваемся данными через noexcept перемещение
             *this = std::move(tmp);
         }
 
@@ -466,21 +459,20 @@ namespace Deque {
 
     template <typename T, typename Allocator, size_t CHUNK_SIZE>
     MyDeque<T, Allocator, CHUNK_SIZE>::MyDeque(std::initializer_list<T> init, const Allocator& alloc)
-        : MyDeque(init.begin(), init.end(), alloc) { /*Просто перенаправляем итераторы списка инициализации в предыдущий конструктор*/
+        : MyDeque(init.begin(), init.end(), alloc) { 
     }
 
 
     template <typename T, typename Allocator, size_t CHUNK_SIZE>
     template <typename InputIterator, typename>
     MyDeque<T, Allocator, CHUNK_SIZE>::MyDeque(InputIterator first_it, InputIterator last_it, const Allocator& alloc)
-        : Base(0, alloc), size_(0), capasity_(0) // Явно сбрасываем в 0
+        : Base(0, alloc), size_(0), capasity_(0) 
     {
-        // 1. Проверяем, итератор произвольного доступа или нет
         if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
             typename std::iterator_traits<InputIterator>::iterator_category>)
         {
             size_t dist = std::distance(first_it, last_it);
-            init_blank_memory(dist); // Выделит точный объем памяти и выставит size_ = dist
+            init_blank_memory(dist); 
 
             iterator it_dest = start;
             try {
@@ -489,7 +481,6 @@ namespace Deque {
                     ++it_dest;
                     ++first_it;
                 }
-                // Синхронизируем финиш на случай, если всё заполнили штатно
                 finish = it_dest;
                 last_index_i = finish.first_index_i;
                 last_index_j = finish.first_index_j;
@@ -502,15 +493,11 @@ namespace Deque {
         }
         else
         {
-            // 2. Для bidirectional / input итераторов (например, std::list)
-            // Инициализируем полностью пустой дек (как дефолтный конструктор)
             init_blank_memory(0);
-            size_ = 0; // push_back сам будет инкрементировать это поле
+            size_ = 0; 
 
             try {
                 while (first_it != last_it) {
-                    // Наш безопасный push_back сам выделит чанки, 
-                    // продвинет finish и корректно увеличит size_!
                     push_back(*first_it);
                     ++first_it;
                 }
@@ -527,64 +514,47 @@ namespace Deque {
 
     template <typename T, typename Allocator, size_t CHUNK_SIZE>
     void MyDeque<T, Allocator, CHUNK_SIZE>::push_back(const T& value) {
-        // Сценарий А: Требуется расширение карты указателей (массива чанков)
         if (size_map_ == 0 || finish.first_index_i >= size_map_) {
             size_type newCapasity = (capasity_ == 0) ? CHUNK_SIZE * 3 : capasity_ * 2;
             size_t new_size_map = (newCapasity % CHUNK_SIZE) == 0 ? (newCapasity / CHUNK_SIZE) : (newCapasity / CHUNK_SIZE) + 1;
             size_t newCapas = new_size_map * CHUNK_SIZE;
 
-            // 1. Создаем локальный буфер новой карты "на стороне". 
-            // Если вылетит bad_alloc, текущий дек вообще не изменится.
             Base new_buf(new_size_map, this->alloc_);
 
             size_t new_first_block = (newCapas / 2 - size_ / 2) / CHUNK_SIZE;
             size_t new_last_block = new_first_block + (last_block_ - first_block_);
 
-            // Переносим указатели на старые чанки во временную карту
             if (map_ != nullptr) {
                 for (size_t old_i = first_block_, new_i = new_first_block; old_i <= last_block_; ++old_i, ++new_i) {
                     new_buf.map_[new_i] = map_[old_i];
                 }
             }
-
-            // Вычисляем, где в НОВОЙ карте будет находиться наш элемент
             size_t block_offset = new_first_block - first_block_;
             size_t target_block_idx = finish.first_index_i + block_offset;
 
             bool allocated_new_chunk = false;
 
-            // 2. Если для нового элемента нужен новый чанк, выделяем его во ВРЕМЕННОЙ карте
             if (finish.first_index_j == 0 && new_buf.map_[target_block_idx] == nullptr) {
-                new_buf.map_[target_block_idx] = new_buf.allocate_block(); // Может бросить bad_alloc
+                new_buf.map_[target_block_idx] = new_buf.allocate_block();
                 allocated_new_chunk = true;
             }
 
-            // 3. Пытаемся сконструировать объект T в памяти этого чанка
             try {
                 T* raw_ptr = new_buf.map_[target_block_idx] + finish.first_index_j;
-                traits_type::construct(this->alloc_, raw_ptr, value); // Может бросить исключение конструктора T
+                traits_type::construct(this->alloc_, raw_ptr, value); 
             }
             catch (...) {
-                // Если конструктор T упал, чистим только то, что успели выделить локально
                 if (allocated_new_chunk) {
                     new_buf.deallocate_block(new_buf.map_[target_block_idx]);
                 }
-                // Старую карту в new_buf мы НЕ зануляли, поэтому при выходе из catch 
-                // деструктор new_buf её не тронет. Текущий контейнер остался девственно чист!
+
                 throw;
             }
-
-            // --- ТОЧКА НЕВОЗВРАТА (Все опасные операции завершились успехом!) ---
-
-            // Чтобы деструктор new_buf не удалил наши СТАРЫЕ чанки, которые мы туда скопировали,
-            // мы очищаем старую карту map_ в текущем контейнере (зануляем ячейки)
             if (map_ != nullptr) {
                 for (size_t old_i = first_block_; old_i <= last_block_; ++old_i) {
                     map_[old_i] = nullptr;
                 }
             }
-
-            // Переносим данные из буфера в текущий класс через безопасный swap плоских полей
             std::swap(this->map_, new_buf.map_);
             std::swap(this->size_map_, new_buf.size_map_);
 
@@ -592,23 +562,20 @@ namespace Deque {
             this->last_block_ = allocated_new_chunk ? std::max(new_last_block, target_block_idx) : new_last_block;
             this->capasity_ = newCapas;
 
-            // Корректируем индексы итераторов
             size_t nfi = start.first_index_i + block_offset;
             size_t nfj = start.first_index_j;
             last_index_i = finish.first_index_i + block_offset;
             last_index_j = finish.first_index_j;
 
-            // Перевыставляем итераторы легально для MSVC Debugging
             start.setBlock(&map_[nfi], nfi, nfj);
             finish.setBlock(&map_[last_index_i], last_index_i, last_index_j);
         }
-        // Сценарий Б: Карта большая, реаллокация самой карты НЕ нужна, максимум — выделить один чанк
         else {
             size_t current_block_idx = finish.first_index_i;
             bool allocated_new_chunk = false;
 
             if (finish.first_index_j == 0 && map_[current_block_idx] == nullptr) {
-                map_[current_block_idx] = allocate_block(); // Может бросить bad_alloc
+                map_[current_block_idx] = allocate_block(); 
                 allocated_new_chunk = true;
             }
 
@@ -632,7 +599,6 @@ namespace Deque {
             }
         }
 
-        // Общий успешный финал для обоих сценариев
         ++finish;
         ++size_;
         last_index_i = finish.first_index_i;
@@ -648,25 +614,22 @@ namespace Deque {
         difference_type dist = std::distance(first, last);
         difference_type free_space_block = CHUNK_SIZE - finish.first_index_j;
         difference_type free_space_back = (size_map_ - finish.first_index_i - 1) * CHUNK_SIZE + free_space_block;
-        //std::cout << "\nfree_space_block = " << free_space_block << " " << "free_space_back = " << free_space_back << "\n";
-        //if (finish.first_index_j != 0) {
+
             if ((finish.first_index_j != 0) && (dist <= free_space_block)) {
                 iterator current_finish = finish;
                 try {
                     while (first != last) {
-                        // Конструируем элемент в сырой памяти, куда указывает текущий виртуальный finish
                         traits_type::construct(this->alloc_, current_finish.current, *first);
                         ++current_finish;
                         ++first;
                     }
                 }
                 catch (...) {
-                    // Откат: уничтожаем всё, что успели создать в этом вызове
                     while (finish != current_finish) {
                         --current_finish;
                         destroy(current_finish.current);
                     }
-                    throw; // Пробрасываем исключение дальше
+                    throw; 
                 }
                 finish = current_finish;
                 last_index_i = finish.first_index_i;
@@ -678,7 +641,6 @@ namespace Deque {
                 for (size_t i = finish.first_index_i; i <= end_block_needed; ++i) {
                     if (map_[i] == nullptr) {
                         map_[i] = allocate_block();
-                        //if (i > last_block_) last_block_ = i;
                     }
                 }
 
@@ -686,61 +648,49 @@ namespace Deque {
                 current_finish.setBlock(&map_[finish.first_index_i], finish.first_index_i, finish.first_index_j);
                 try {
                     while (first != last) {
-                        // Конструируем элемент в сырой памяти, куда указывает текущий виртуальный finish
                         traits_type::construct(this->alloc_, current_finish.current, *first);
                         ++current_finish;
                         ++first;
                     }
                 }
                 catch (...) {
-                    // Откат: уничтожаем всё, что успели создать в этом вызове
                     while (finish != current_finish) {
                         --current_finish;
                         destroy(current_finish.current);
                     }
-                    throw; // Пробрасываем исключение дальше
+                    throw; 
                 }
 
-                // Если всё прошло успешно, обновляем состояние дека
                 finish = current_finish;
                 last_index_i = finish.first_index_i;
                 last_index_j = finish.first_index_j;
                 size_ += dist;
             }
             else if ((finish.first_index_j == 0) && (dist <= free_space_back)) {
-                // 1. Правильно вычисляем конечный блок БЕЗ использования арифметики итераторов
                 size_t total_j = finish.first_index_j + dist;
                 size_t end_block_needed = finish.first_index_i + (total_j / CHUNK_SIZE);
                 if (total_j % CHUNK_SIZE == 0 && end_block_needed > finish.first_index_i) {
                     --end_block_needed;
                 }
-
-                // 2. Выделяем чанки и ОБЯЗАТЕЛЬНО обновляем границы в базовом буфере
                 for (size_t i = finish.first_index_i; i <= end_block_needed; ++i) {
                     if (map_[i] == nullptr) {
                         map_[i] = allocate_block();
                     }
                 }
-                // КРИТИЧЕСКИ ВАЖНО: Обновляем правую границу выделенных блоков,
-                // чтобы деструктор и итераторы знали, до какого момента память легальна!
                 if (end_block_needed > last_block_) {
                     last_block_ = end_block_needed;
                 }
-
-                // 3. Переходим на абсолютно безопасные плоские индексы для заполнения
                 size_t curr_i = finish.first_index_i;
                 size_t curr_j = finish.first_index_j;
                 size_t constructed_count = 0;
 
                 try {
                     while (first != last) {
-                        // Если мы заполнили текущий чанк полностью, переходим на начало следующего чанка
                         if (curr_j == CHUNK_SIZE) {
                             curr_j = 0;
                             ++curr_i;
                         }
 
-                        // Конструируем элемент по прямому и честному адресу памяти в чанке
                         T* raw_ptr = map_[curr_i] + curr_j;
                         traits_type::construct(this->alloc_, raw_ptr, *first);
 
@@ -750,7 +700,6 @@ namespace Deque {
                     }
                 }
                 catch (...) {
-                    // Откат: если упал конструктор T, строго назад уничтожаем всё, что создали в этом вызове
                     for (size_t c = 0; c < constructed_count; ++c) {
                         if (curr_j == 0) {
                             curr_j = CHUNK_SIZE;
@@ -761,133 +710,111 @@ namespace Deque {
                     }
                     throw;
                 }
-
-                // 4. Если всё прошло успешно, ОДИН РАЗ обновляем состояние итератора finish контейнера
                 finish.setBlock(&map_[curr_i], curr_i, curr_j);
                 last_index_i = finish.first_index_i;
                 last_index_j = finish.first_index_j;
                 size_ += dist;
             }
             else {
-            // 1. Математически точный расчет новой карты: она должна вмещать старые блоки + новые элементы
-            size_t old_num_blocks = last_block_ - first_block_ + 1;
-            size_t additional_blocks_needed = (finish.first_index_j + dist) / CHUNK_SIZE + 2;
-
-            size_t new_size_map = (size_map_ == 0) ? (dist / CHUNK_SIZE) + 5 : (size_map_ * 2) + additional_blocks_needed;
-            size_t newCapas = new_size_map * CHUNK_SIZE;
-
-            // Создаем новый временный буфер
-            Base new_buf(new_size_map, this->alloc_);
-
-            // Центрируем старые блоки с запасом
-            size_t new_first_block = (new_size_map - old_num_blocks) / 2;
-            size_t new_last_block = new_first_block + old_num_blocks - 1;
-
-            // Фиксируем разницу индексов ДО каких-либо изменений
-            size_t block_offset = new_first_block - first_block_;
-
-            // Копируем указатели на существующие чанки в новую карту
-            if (map_ != nullptr) {
-                for (size_t old_i = first_block_, new_i = new_first_block; old_i <= last_block_; ++old_i, ++new_i) {
-                    new_buf.map_[new_i] = map_[old_i];
-                }
-            }
-
-            // Точный расчет индексов, где начнется вставка новых элементов во временной карте
-            size_t curr_i = finish.first_index_i + block_offset;
-            size_t curr_j = finish.first_index_j;
-
-            // Вычисляем конечный блок, который потребуется для вставки dist элементов
-            size_t total_j = curr_j + dist;
-            size_t end_block_needed = curr_i + (total_j / CHUNK_SIZE);
-            if (total_j % CHUNK_SIZE == 0 && end_block_needed > curr_i) {
-                --end_block_needed;
-            }
-
-            // Массив для отслеживания выделенных чанков на случай исключения
-            std::vector<size_t> allocated_chunk_indices;
-            allocated_chunk_indices.reserve(end_block_needed - curr_i + 1);
-
-            try {
-                // 2. Выделяем новые чанки во временной карте (теперь гарантированно БЕЗ выхода за границы)
-                for (size_t i = curr_i; i <= end_block_needed; ++i) {
-                    if (new_buf.map_[i] == nullptr) {
-                        new_buf.map_[i] = new_buf.allocate_block();
-                        allocated_chunk_indices.push_back(i); // Запоминаем для отката
+                size_t old_num_blocks = last_block_ - first_block_ + 1;
+                size_t additional_blocks_needed = (finish.first_index_j + dist) / CHUNK_SIZE + 2;
+    
+                size_t new_size_map = (size_map_ == 0) ? (dist / CHUNK_SIZE) + 5 : (size_map_ * 2) + additional_blocks_needed;
+                size_t newCapas = new_size_map * CHUNK_SIZE;
+    
+                Base new_buf(new_size_map, this->alloc_);
+    
+                size_t new_first_block = (new_size_map - old_num_blocks) / 2;
+                size_t new_last_block = new_first_block + old_num_blocks - 1;
+    
+                size_t block_offset = new_first_block - first_block_;
+    
+                if (map_ != nullptr) {
+                    for (size_t old_i = first_block_, new_i = new_first_block; old_i <= last_block_; ++old_i, ++new_i) {
+                        new_buf.map_[new_i] = map_[old_i];
                     }
                 }
-
-                // 3. Копируем/Конструируем элементы БЕЗ использования сложного итератора во временную карту new_buf.map_
-                size_t constructed_count = 0;
-                size_t insert_i = curr_i;
-                size_t insert_j = curr_j;
-
+    
+                size_t curr_i = finish.first_index_i + block_offset;
+                size_t curr_j = finish.first_index_j;
+    
+                size_t total_j = curr_j + dist;
+                size_t end_block_needed = curr_i + (total_j / CHUNK_SIZE);
+                if (total_j % CHUNK_SIZE == 0 && end_block_needed > curr_i) {
+                    --end_block_needed;
+                }
+    
+                std::vector<size_t> allocated_chunk_indices;
+                allocated_chunk_indices.reserve(end_block_needed - curr_i + 1);
+    
                 try {
-                    while (first != last) {
-                        if (insert_j == CHUNK_SIZE) {
-                            insert_j = 0;
-                            ++insert_i;
+                    for (size_t i = curr_i; i <= end_block_needed; ++i) {
+                        if (new_buf.map_[i] == nullptr) {
+                            new_buf.map_[i] = new_buf.allocate_block();
+                            allocated_chunk_indices.push_back(i);
                         }
-                        T* raw_ptr = new_buf.map_[insert_i] + insert_j;
-                        traits_type::construct(this->alloc_, raw_ptr, *first);
-                        ++insert_j;
-                        ++constructed_count;
-                        ++first;
                     }
+    
+                    size_t constructed_count = 0;
+                    size_t insert_i = curr_i;
+                    size_t insert_j = curr_j;
+    
+                    try {
+                        while (first != last) {
+                            if (insert_j == CHUNK_SIZE) {
+                                insert_j = 0;
+                                ++insert_i;
+                            }
+                            T* raw_ptr = new_buf.map_[insert_i] + insert_j;
+                            traits_type::construct(this->alloc_, raw_ptr, *first);
+                            ++insert_j;
+                            ++constructed_count;
+                            ++first;
+                        }
+                    }
+                    catch (...) {
+                        for (size_t c = 0; c < constructed_count; ++c) {
+                            if (insert_j == 0) {
+                                insert_j = CHUNK_SIZE;
+                                --insert_i;
+                            }
+                            --insert_j;
+                            destroy(new_buf.map_[insert_i] + insert_j);
+                        }
+                        throw;
+                    }
+                    curr_i = insert_i;
+                    curr_j = insert_j;
                 }
                 catch (...) {
-                    // Если упал конструктор T, уничтожаем только то, что успели создать в этом вызове
-                    for (size_t c = 0; c < constructed_count; ++c) {
-                        if (insert_j == 0) {
-                            insert_j = CHUNK_SIZE;
-                            --insert_i;
-                        }
-                        --insert_j;
-                        destroy(new_buf.map_[insert_i] + insert_j);
+                    for (size_t idx : allocated_chunk_indices) {
+                        new_buf.deallocate_block(new_buf.map_[idx]);
+                        new_buf.map_[idx] = nullptr;
                     }
                     throw;
                 }
-
-                // Запоминаем финальные индексы для итератора finish
-                curr_i = insert_i;
-                curr_j = insert_j;
-            }
-            catch (...) {
-                // ОТКАТ ПАМЯТИ В СЛУЧАЕ ОШИБКИ
-                for (size_t idx : allocated_chunk_indices) {
-                    new_buf.deallocate_block(new_buf.map_[idx]);
-                    new_buf.map_[idx] = nullptr;
+    
+                if (map_ != nullptr) {
+                    for (size_t old_i = first_block_; old_i <= last_block_; ++old_i) {
+                        map_[old_i] = nullptr;
+                    }
                 }
-                throw;
-            }
-
-            // --- ТОЧКА НЕВОЗВРАТА (Все опасные операции завершились успехом!) ---
-
-            // 4. Очищаем старую карту, чтобы деструктор `new_buf` не уничтожил наши старые рабочие чанки
-            if (map_ != nullptr) {
-                for (size_t old_i = first_block_; old_i <= last_block_; ++old_i) {
-                    map_[old_i] = nullptr;
-                }
-            }
-
-            // 5. Обновляем состояние контейнера (Безопасный swap)
-            std::swap(this->map_, new_buf.map_);
-            std::swap(this->size_map_, new_buf.size_map_);
-
-            // Корректируем границы блоков с учетом добавленных чанков
-            this->first_block_ = new_first_block;
-            this->last_block_ = std::max(new_last_block, end_block_needed);
-            this->capasity_ = newCapas;
-
-            // 6. Корректируем итераторы самого контейнера легальным способом
-            size_t new_start_i = start.first_index_i + block_offset;
-
-            start.setBlock(&map_[new_start_i], new_start_i, start.first_index_j);
-            finish.setBlock(&map_[curr_i], curr_i, curr_j);
-
-            last_index_i = finish.first_index_i;
-            last_index_j = finish.first_index_j;
-            size_ += dist;
+                    
+                std::swap(this->map_, new_buf.map_);
+                std::swap(this->size_map_, new_buf.size_map_);
+    
+                this->first_block_ = new_first_block;
+                this->last_block_ = std::max(new_last_block, end_block_needed);
+                this->capasity_ = newCapas;
+    
+                size_t new_start_i = start.first_index_i + block_offset;
+    
+                start.setBlock(&map_[new_start_i], new_start_i, start.first_index_j);
+                finish.setBlock(&map_[curr_i], curr_i, curr_j);
+    
+                last_index_i = finish.first_index_i;
+                last_index_j = finish.first_index_j;
+                size_ += dist;
             }
 
     }
@@ -905,7 +832,7 @@ namespace Deque {
         last_index_i = finish.first_index_i;
         last_index_j = finish.first_index_j;
         if (finish.first_index_j == 0) {
-            --last_block_; // Обновляем границу буфера
+            --last_block_;
         }
     }
 
