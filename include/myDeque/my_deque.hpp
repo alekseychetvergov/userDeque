@@ -839,34 +839,26 @@ namespace Deque {
     template <typename T, typename Allocator, size_t CHUNK_SIZE>
     void MyDeque<T, Allocator, CHUNK_SIZE>::push_front(const T& value) {
 
-        // Сценарий А: Мы уперлись в самый левый край карты (start.first_index_i == 0) 
-        // ИЛИ старт на j == 0 и предыдущий блок физически некуда вставить, так как карта кончилась.
         if (size_map_ == 0 || (start.first_index_i == 0 && start.first_index_j == 0)) {
             size_type newCapasity = (capasity_ == 0) ? CHUNK_SIZE * 3 : capasity_ * 2;
             size_t new_size_map = (newCapasity % CHUNK_SIZE) == 0 ? (newCapasity / CHUNK_SIZE) : (newCapasity / CHUNK_SIZE) + 1;
             size_t newCapas = new_size_map * CHUNK_SIZE;
 
-            // 1. Выделяем новую карту во временном буфере "на стороне"
-            Base new_buf(new_size_map, this->alloc_); // Обязательно передаем текущий аллокатор!
+            Base new_buf(new_size_map, this->alloc_); 
 
-            // Важно: так как мы добавляем элемент В НАЧАЛО, смещение блоков должно учитывать, 
-            // чтобы слева оставалось достаточно места. Центрируем старые блоки в новой карте.
             size_t new_first_block = (newCapas / 2 - size_ / 2) / CHUNK_SIZE;
             size_t new_last_block = new_first_block + (last_block_ - first_block_);
-
-            // Переносим указатели на старые чанки
+            
             if (map_ != nullptr) {
                 for (size_t old_i = first_block_, new_i = new_first_block; old_i <= last_block_; ++old_i, ++new_i) {
                     new_buf.map_[new_i] = map_[old_i];
                 }
             }
 
-            // Вычисляем, где логически находился старт в новой карте
             size_t block_offset = new_first_block - first_block_;
             size_t current_start_i = start.first_index_i + block_offset;
             size_t current_start_j = start.first_index_j;
 
-            // Определяем целевые индексы для НОВОГО элемента (на 1 позицию левее текущего старта)
             size_t target_block_idx = current_start_i;
             size_t target_index_j = 0;
 
@@ -879,32 +871,29 @@ namespace Deque {
             }
 
             bool allocated_new_chunk = false;
-            // 2. Если целевой чанк еще не выделен, выделяем его локально во временной карте
+
             if (new_buf.map_[target_block_idx] == nullptr) {
-                new_buf.map_[target_block_idx] = new_buf.allocate_block(); // Может бросить bad_alloc
+                new_buf.map_[target_block_idx] = new_buf.allocate_block();
                 allocated_new_chunk = true;
             }
 
-            // 3. Пытаемся сконструировать объект T в сырой памяти нового чанка
             try {
                 T* raw_ptr = new_buf.map_[target_block_idx] + target_index_j;
-                traits_type::construct(this->alloc_, raw_ptr, value); // Может бросить исключение конструктора T
+                traits_type::construct(this->alloc_, raw_ptr, value); 
             }
             catch (...) {
                 if (allocated_new_chunk) {
                     new_buf.deallocate_block(new_buf.map_[target_block_idx]);
                 }
-                throw; // Откат: старая карта не тронута, capacity не изменилась
+                throw;
             }
 
-            // --- ТОЧКА НЕВОЗВРАТА (Все опасные операции завершились успехом!) ---
             if (map_ != nullptr) {
                 for (size_t old_i = first_block_; old_i <= last_block_; ++old_i) {
-                    map_[old_i] = nullptr; // Зануляем, чтобы деструктор new_buf не стёр живые данные
+                    map_[old_i] = nullptr; 
                 }
             }
 
-            // Безопасный обмен плоскими полями
             std::swap(this->map_, new_buf.map_);
             std::swap(this->size_map_, new_buf.size_map_);
 
@@ -912,15 +901,13 @@ namespace Deque {
             this->last_block_ = new_last_block;
             this->capasity_ = newCapas;
 
-            // Вычисляем новые финальные позиции итераторов
             size_t nfi_finish = finish.first_index_i + block_offset;
             size_t nfj_finish = finish.first_index_j;
 
-            // Принудительно и легально обновляем прокси-связи MSVC
             start.setBlock(&map_[target_block_idx], target_block_idx, target_index_j);
             finish.setBlock(&map_[nfi_finish], nfi_finish, nfj_finish);
         }
-        // Сценарий Б: Реаллокация карты не нужна, на левом краю карты есть свободные блоки
+
         else {
             size_t target_block_idx = start.first_index_i;
             size_t target_index_j = 0;
@@ -935,7 +922,7 @@ namespace Deque {
 
             bool allocated_new_chunk = false;
             if (map_[target_block_idx] == nullptr) {
-                map_[target_block_idx] = allocate_block(); // Может бросить bad_alloc
+                map_[target_block_idx] = allocate_block(); 
                 allocated_new_chunk = true;
             }
 
@@ -955,11 +942,9 @@ namespace Deque {
                 first_block_ = target_block_idx;
             }
 
-            // Только теперь безопасно сдвигаем старт на новую позицию
             start.setBlock(&map_[target_block_idx], target_block_idx, target_index_j);
         }
 
-        // Общий успешный финал для обоих сценариев
         ++size_;
         last_index_i = finish.first_index_i;
         last_index_j = finish.first_index_j;
@@ -988,7 +973,6 @@ namespace Deque {
                 }
             }
             catch (...) {
-                // Откат: уничтожаем всё, что успели создать в этом вызове
                 while (itherNow != newStart) {
                     --itherNow;
                     destroy(itherNow.current);
@@ -1015,7 +999,6 @@ namespace Deque {
                     frontNewJ = CHUNK_SIZE - (rem % CHUNK_SIZE);
                 }
             }
-            //std::cout << frontNewI << " " << frontNewJ << "\n";
 
             if (size_ == 0) {
                 ++frontNewJ;
@@ -1024,21 +1007,17 @@ namespace Deque {
                     ++frontNewI;
                 }
             }
-            // 2. Выделяем чанки и ОБЯЗАТЕЛЬНО обновляем границы в базовом буфере
             for (size_t i = start.first_index_i - 1; i >= frontNewI; --i) {
                 if (map_[i] == nullptr) {
                     map_[i] = allocate_block();
                 }
                 if (i == 0) break;
             }
-            // КРИТИЧЕСКИ ВАЖНО: Обновляем правую границу выделенных блоков,
-            // чтобы деструктор и итераторы знали, до какого момента память легальна!
             size_t old_first_block = first_block_;
             if (frontNewI < first_block_) {
                 first_block_ = frontNewI;
             }
-            // 3. Переходим на абсолютно безопасные плоские индексы для заполнения
-
+            
             size_t curr_i = frontNewI;
             size_t curr_j = frontNewJ;
             size_t constructed_count = 0;
@@ -1049,7 +1028,6 @@ namespace Deque {
                         curr_j = 0;
                         ++curr_i;
                     }
-                    // Конструируем элемент в сырой памяти
                     T* raw_ptr = map_[curr_i] + curr_j;
                     traits_type::construct(this->alloc_, raw_ptr, *first);
 
@@ -1071,45 +1049,35 @@ namespace Deque {
                 first_block_ = old_first_block;
                 throw;
             }
-            // 4. Успешный финал: сдвигаем официальный старт контейнера влево
             start.setBlock(&map_[frontNewI], frontNewI, frontNewJ);
             size_ += dist;
         }
         else {
-            // Вычисляем новую емкость с запасом
             size_type newCapacity = ((capasity_ == 0) ? CHUNK_SIZE * 3 : capasity_ * 2) + dist;
             size_t new_size_map = ((newCapacity % CHUNK_SIZE) == 0 ? (newCapacity / CHUNK_SIZE) : (newCapacity / CHUNK_SIZE) + 1);
             size_t newCapas = new_size_map * CHUNK_SIZE;
 
-            // 1. Создаем новый временный буфер (карту) на стороне
             Base new_buf(new_size_map, this->alloc_);
 
-            // Вычисляем, сколько блоков занимали старые элементы
             size_t old_num_blocks = (map_ != nullptr) ? (last_block_ - first_block_ + 1) : 0;
 
-            // КРИТИЧЕСКОЕ ОТЛИЧИЕ ОТ PUSH_BACK:
-            // Центрируем старые блоки, но со смещением вправо, чтобы гарантировать свободные блоки слева под dist
             size_t min_blocks_for_dist = (dist / CHUNK_SIZE) + 2;
             size_t new_first_block = (new_size_map > old_num_blocks + min_blocks_for_dist)
                 ? (new_size_map - old_num_blocks) / 2 + (min_blocks_for_dist / 2)
                 : new_size_map - old_num_blocks - 1;
             size_t new_last_block = new_first_block + old_num_blocks - 1;
 
-            // Фиксируем смещение старых блоков относительно новой карты
             size_t block_offset = new_first_block - first_block_;
 
-            // Копируем указатели на существующие чанки в новую временную карту
             if (map_ != nullptr) {
                 for (size_t old_i = first_block_, new_i = new_first_block; old_i <= last_block_; ++old_i, ++new_i) {
                     new_buf.map_[new_i] = map_[old_i];
                 }
             }
 
-            // Вычисляем, где находился бы СТАРЫЙ старт в НОВОЙ карте
             size_t old_start_i_in_new = start.first_index_i + block_offset;
             size_t old_start_j_in_new = start.first_index_j;
 
-            // Считаем точные координаты, где должен начаться НОВЫЙ старт контейнера (отступаем на dist влево)
             size_t frontNewI = old_start_i_in_new;
             size_t frontNewJ = old_start_j_in_new;
 
@@ -1136,12 +1104,10 @@ namespace Deque {
                 }
             }
 
-            // Вектор для трекинга выделенных блоков на случай rollback
             std::vector<size_t> allocated_chunk_indices;
             allocated_chunk_indices.reserve(old_start_i_in_new - frontNewI + 1);
 
             try {
-                // 2. Выделяем новые чанки во временной карте слева под новые элементы
                 for (size_t i = frontNewI; i <= old_start_i_in_new; ++i) {
                     if (new_buf.map_[i] == nullptr) {
                         new_buf.map_[i] = new_buf.allocate_block();
@@ -1149,7 +1115,6 @@ namespace Deque {
                     }
                 }
 
-                // 3. Конструируем новые элементы СЛЕВА НАПРАВО (от frontNewI/J до старого старта)
                 if (size_ == 0) {
                     ++frontNewJ;
                     if (frontNewJ == CHUNK_SIZE) {
@@ -1176,7 +1141,6 @@ namespace Deque {
                     }
                 }
                 catch (...) {
-                    // Если упал конструктор T, уничтожаем только то, что создали в текущем цикле
                     for (size_t c = 0; c < constructed_count; ++c) {
                         if (curr_j == 0) {
                             curr_j = CHUNK_SIZE;
@@ -1189,7 +1153,6 @@ namespace Deque {
                 }
             }
             catch (...) {
-                // Если упал аллокатор чанков или конструктор T, полностью зачищаем созданные блоки
                 for (size_t idx : allocated_chunk_indices) {
                     new_buf.deallocate_block(new_buf.map_[idx]);
                     new_buf.map_[idx] = nullptr;
@@ -1197,28 +1160,21 @@ namespace Deque {
                 throw;
             }
 
-            // --- ТОЧКА НЕВОЗВРАТА (Все опасные операции завершились успехом!) ---
-
-            // 4. Очищаем старую карту в контейнере, чтобы деструктор `new_buf` не удалил чанки
             if (map_ != nullptr) {
                 for (size_t old_i = first_block_; old_i <= last_block_; ++old_i) {
                     map_[old_i] = nullptr;
                 }
             }
 
-            // 5. Меняем карты местами (noexcept транзакция)
             std::swap(this->map_, new_buf.map_);
             std::swap(this->size_map_, new_buf.size_map_);
 
-            // Синхронизируем новые границы блоков контейнера
             this->first_block_ = std::min(new_first_block, frontNewI);
             this->last_block_ = new_last_block;
             this->capasity_ = newCapas;
 
-            // 6. Вычисляем новое положение итератора finish контейнера
             size_t new_finish_i = finish.first_index_i + block_offset;
 
-            // Перевыставляем итераторы легально для MSVC Iterator Debugging
             start.setBlock(&map_[frontNewI], frontNewI, frontNewJ);
             finish.setBlock(&map_[new_finish_i], new_finish_i, finish.first_index_j);
 
@@ -1263,8 +1219,6 @@ namespace Deque {
         if (size_ == 0) {
             throw std::runtime_error("Deque is empty");
         }
-        // Так как finish указывает ЗА последний элемент, 
-        // последний живой элемент находится на (finish - 1)
         return *(finish - 1);
     }
     
@@ -1285,15 +1239,13 @@ namespace Deque {
         }
         else if (index == static_cast<difference_type>(size_)) {
             push_back(value);
-            return finish - 1; // элемент встал перед прошлым finish
+            return finish - 1; 
         }
 
         difference_type distStart = index;
         difference_type distFinish = static_cast<difference_type>(size_) - index;
 
         if (distStart < distFinish) {
-            // Элемент ближе к началу: готовим место через push_front
-            // Копируем самый первый элемент вперед
             push_front(front());
 
             // Теперь старт сместился влево на 1 элемент. 
