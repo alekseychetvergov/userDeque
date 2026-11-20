@@ -1248,63 +1248,48 @@ namespace Deque {
         if (distStart < distFinish) {
             push_front(front());
 
-            // Теперь старт сместился влево на 1 элемент. 
-            // Старые элементы теперь находятся со смещением +1.
             iterator old_start = start + 1;
-            iterator target_pos = start + (index + 1); // Позиция, куда должна встать копия старого элемента
+            iterator target_pos = start + (index + 1); 
 
             size_type constructed_count = 0;
             iterator curr = old_start;
             try {
-                // Конструированием (а не присваиванием) сдвигаем элементы влево
                 while (curr != target_pos) {
-                    // Конструируем копию следующего элемента на месте текущего
                     traits_type::construct(this->alloc_, curr.current, *(curr + 1));
                     ++curr;
                     ++constructed_count;
                 }
-
-                // Все элементы успешно сдвинуты. Теперь безопасно перезаписываем целевой элемент.
-                // (Используем оператор присваивания, так как на этой позиции объект уже существовал)
                 *target_pos = value;
             }
             catch (...) {
-                // ОТКАТ: Если сдвиг или финальное присваивание выбросили исключение
-                // 1. Уничтожаем все созданные дубликаты
                 iterator destroy_it = old_start;
                 for (size_type i = 0; i < constructed_count; ++i) {
                     destroy(destroy_it.current);
                     ++destroy_it;
                 }
-                // 2. Убираем временный элемент из начала, возвращая структуру памяти в исходное состояние
                 pop_front();
-                throw; // Пробрасываем исключение дальше (Строгая гарантия выполнена)
+                throw;
             }
 
             return target_pos;
         }
         else {
-            // Элемент ближе к концу: готовим место через push_back
             push_back(back());
 
             iterator old_finish = finish - 1;
-            iterator target_pos = start + index; // Исходная позиция вставки
+            iterator target_pos = start + index; 
 
             size_type constructed_count = 0;
             iterator curr = old_finish - 1;
             try {
-                // Сдвигаем элементы вправо с конца к позиции вставки
                 while (curr != target_pos) {
                     traits_type::construct(this->alloc_, curr.current, *(curr - 1));
                     --curr;
                     ++constructed_count;
                 }
-
-                // Перезаписываем элемент на целевой позиции
                 *target_pos = value;
             }
             catch (...) {
-                // ОТКАТ: Если что-то упало в процессе сдвига вправо
                 iterator destroy_it = old_finish - 1;
                 for (size_type i = 0; i < constructed_count; ++i) {
                     destroy(destroy_it.current);
@@ -1323,20 +1308,13 @@ namespace Deque {
     template <typename InputIterator>
         requires std::input_iterator<InputIterator>
     MyDeque<T, Allocator, CHUNK_SIZE>::iterator MyDeque<T, Allocator, CHUNK_SIZE>::insert(const_iterator position, InputIterator first, InputIterator last) {
-        // 1. Если диапазон пуст, вставлять нечего. 
-        // Возвращаем валидный неконстантный итератор на позицию.
         if (first == last) {
             return start + (position - cbegin());
         }
-
-        // Запоминаем индекс вставки, так как position — константный итератор для внешнего использования
         difference_type insert_index = position - cbegin();
 
-        // 2. Создаем временный дек с ТЕМ ЖЕ аллокатором, что и у текущего контейнера
         MyDeque tmp(this->alloc_);
         tmp.reserve(this->capasity_);
-        // Заранее резервируем суммарный объем памяти, если категория итераторов позволяет узнать dist.
-        // Это минимизирует количество реаллокаций во временном контейнере.
         if constexpr (std::is_base_of_v<std::random_access_iterator_tag,
             typename std::iterator_traits<InputIterator>::iterator_category>) {
             difference_type dist = std::distance(first, last);
@@ -1344,39 +1322,29 @@ namespace Deque {
         }
 
         try {
-            // Этап А: Копируем элементы ДО точки вставки
             for (difference_type i = 0; i < insert_index; ++i) {
                 tmp.push_back(*(start + i));
             }
 
-            // Этап Б: Копируем элементы из вставляемого диапазона [first, last)
             while (first != last) {
                 tmp.push_back(*first);
                 ++first;
             }
 
-            // Этап В: Копируем элементы ПОСЛЕ точки вставки
             for (size_type i = insert_index; i < size_; ++i) {
                 tmp.push_back(*(start + i));
             }
         }
         catch (...) {
-            // Если что-то упало (std::bad_alloc или конструктор копирования T), 
-            // деструктор `tmp` автоматически очистит всё, что успел выделить.
-            // Исходный дек (*this) гарантированно не изменился.
             throw;
         }
 
-        // --- ТОЧКА НЕВОЗВРАТА ---
-        // Все элементы успешно скопированы во временный буфер.
-        // Обмениваем низкоуровневые буферы (карты указателей) из MyDequeBuff
         std::swap(this->map_, tmp.map_);
         std::swap(this->size_map_, tmp.size_map_);
         std::swap(this->size_elem_map_, tmp.size_elem_map_);
         std::swap(this->first_block_, tmp.first_block_);
         std::swap(this->last_block_, tmp.last_block_);
 
-        // Обмениваем высокоуровневые поля MyDeque
         std::swap(this->size_, tmp.size_);
         std::swap(this->capasity_, tmp.capasity_);
         std::swap(this->capac_size_ratio_, tmp.capac_size_ratio_);
@@ -1385,23 +1353,17 @@ namespace Deque {
         std::swap(this->start, tmp.start);
         std::swap(this->finish, tmp.finish);
 
-        // ВАЖНО: Аллокаторы (this->alloc_ и tmp.alloc_) остаются на своих местах и НЕ перемещаются.
-        // Теперь деструктор `tmp` автоматически и полностью безопасно уничтожит СТАРЫЕ данные 
-        // вашего контейнера, так как мы подменили его внутренности.
-        // Возвращаем итератор, указывающий на первый из вставленных элементов
         return start + insert_index;
     }
 
     template <typename T, typename Allocator, size_t CHUNK_SIZE>
     template <typename... Args>
     MyDeque<T, Allocator, CHUNK_SIZE>::reference MyDeque<T, Allocator, CHUNK_SIZE>::emplace_back(Args&&... args) {
-        // Сценарий А: Карта чанков заполнена, требуется её расширение
         if (size_map_ == 0 || finish.first_index_i >= size_map_) {
             size_type newCapacity = (capasity_ == 0) ? CHUNK_SIZE * 3 : capasity_ * 2;
             size_t new_size_map = (newCapacity % CHUNK_SIZE) == 0 ? (newCapacity / CHUNK_SIZE) : (newCapacity / CHUNK_SIZE) + 1;
             size_t newCapas = new_size_map * CHUNK_SIZE;
 
-            // Создаем временный буфер для новой карты
             Base new_buf(new_size_map, this->alloc_);
 
             size_t new_first_block = (newCapas / 2 - size_ / 2) / CHUNK_SIZE;
@@ -1418,23 +1380,21 @@ namespace Deque {
             bool allocated_new_chunk = false;
 
             if (finish.first_index_j == 0 && new_buf.map_[target_block_idx] == nullptr) {
-                new_buf.map_[target_block_idx] = new_buf.allocate_block(); // Может бросить bad_alloc
+                new_buf.map_[target_block_idx] = new_buf.allocate_block(); 
                 allocated_new_chunk = true;
             }
 
             try {
                 T* raw_ptr = new_buf.map_[target_block_idx] + finish.first_index_j;
-                // Конструируем объект прямо в куче, используя переданные аргументы
                 traits_type::construct(this->alloc_, raw_ptr, std::forward<Args>(args)...);
             }
             catch (...) {
                 if (allocated_new_chunk) {
                     new_buf.deallocate_block(new_buf.map_[target_block_idx]);
                 }
-                throw; // Откат: исходный контейнер не тронут
+                throw; 
             }
 
-            // --- ТОЧКА НЕВОЗВРАТА ---
             if (map_ != nullptr) {
                 for (size_t old_i = first_block_; old_i <= last_block_; ++old_i) {
                     map_[old_i] = nullptr;
@@ -1456,13 +1416,12 @@ namespace Deque {
             start.setBlock(&map_[nfi], nfi, nfj);
             finish.setBlock(&map_[nli], nli, nlj);
         }
-        // Сценарий Б: Реаллокация карты не нужна, работаем в текущей карте
         else {
             size_t current_block_idx = finish.first_index_i;
             bool allocated_new_chunk = false;
 
             if (finish.first_index_j == 0 && map_[current_block_idx] == nullptr) {
-                map_[current_block_idx] = allocate_block(); // Может бросить bad_alloc
+                map_[current_block_idx] = allocate_block(); 
                 allocated_new_chunk = true;
             }
 
@@ -1475,7 +1434,7 @@ namespace Deque {
                     deallocate_block(map_[current_block_idx]);
                     map_[current_block_idx] = nullptr;
                 }
-                throw; // Откат
+                throw; 
             }
 
             if (allocated_new_chunk) {
@@ -1486,7 +1445,6 @@ namespace Deque {
             }
         }
 
-        // Общий успешный финал
         T* result_ptr = finish.current;
         ++finish;
         ++size_;
